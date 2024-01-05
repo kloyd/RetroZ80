@@ -40,10 +40,12 @@ COLON:	DEC	IX
 	LD	B,D
 	JP	(IY)
 
-; Execute primitive and needs a dictionary entry for defining words.
+; EXECUTE primitive needs a dictionary entry for defining words.
+; This is a model for all other Primitive words that will be added to the dictionary
+;
 	DB	7,'E','X','E'	; Header for dictionary search
 	DW	0		; Link address 0000 == End of Linked List.
-EXECUTE: Dw	*+2		; Address of EXECUTE.
+EXECUTE: DW	*+2		; Address of EXECUTE.
 	POP	HL		; primitive code.
 	JR	RUN
 

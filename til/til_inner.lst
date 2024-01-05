@@ -44,19 +44,21 @@ Line   Addr Opcode      Label   Instruction
 0040   8023 42          	LD	B,D
 0041   8024 FD E9       	JP	(IY)
 0042   8026             
-0043   8026             ; Execute primitive and needs a dictionary entry for defining words.
-0044   8026 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
-0045   802A 00 00       	DW	0		; Link address 0000 == End of Linked List.
-0046   802C 2E 80       EXECUTE: Dw	*+2		; Address of EXECUTE.
-0047   802E E1          	POP	HL		; primitive code.
-0048   802F 18 E1       	JR	RUN
-0049   8031             
-0050   8031             ; End of Inner.
+0043   8026             ; EXECUTE primitive needs a dictionary entry for defining words.
+0044   8026             ; This is a model for all other Primitive words that will be added to the dictionary
+0045   8026             ;
+0046   8026 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
+0047   802A 00 00       	DW	0		; Link address 0000 == End of Linked List.
+0048   802C 2E 80       EXECUTE: DW	*+2		; Address of EXECUTE.
+0049   802E E1          	POP	HL		; primitive code.
+0050   802F 18 E1       	JR	RUN
 0051   8031             
-0052   8031             
+0052   8031             ; End of Inner.
 0053   8031             
 0054   8031             
 0055   8031             
 0056   8031             
-0057   8031             	END
+0057   8031             
+0058   8031             
+0059   8031             	END
 Number of errors = 0
