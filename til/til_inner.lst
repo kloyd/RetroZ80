@@ -36,11 +36,27 @@ Line   Addr Opcode      Label   Instruction
 0032   8016 EB          	EX	DE,HL
 0033   8017 E9          	JP	(HL)
 0034   8018             
-0035   8018             
-0036   8018             
-0037   8018             
-0038   8018             
-0039   8018             
-0040   8018             
-0041   8018             	END
+0035   8018 DD 2B       COLON:	DEC	IX
+0036   801A DD 70 00    	LD	(IX+0),B
+0037   801D DD 2B       	DEC	IX
+0038   801F DD 71 00    	LD	(IX+0),C
+0039   8022 4B          	LD	C,E
+0040   8023 42          	LD	B,D
+0041   8024 FD E9       	JP	(IY)
+0042   8026             
+0043   8026             ; Execute primitive and needs a dictionary entry for defining words.
+0044   8026 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
+0045   802A 00 00       	DW	0		; Link address 0000 == End of Linked List.
+0046   802C 2E 80       EXECUTE: Dw	*+2		; Address of EXECUTE.
+0047   802E E1          	POP	HL		; primitive code.
+0048   802F 18 E1       	JR	RUN
+0049   8031             
+0050   8031             ; End of Inner.
+0051   8031             
+0052   8031             
+0053   8031             
+0054   8031             
+0055   8031             
+0056   8031             
+0057   8031             	END
 Number of errors = 0
