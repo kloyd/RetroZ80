@@ -49,9 +49,10 @@ OUTER:
 ; YES -> QUESTION
 
 ; QUESTION
-QUESTION: DW *+2
-	LD HL,(DP)
-	INC HL
+QUESTION:
+	DW	$+2
+	LD 	HL,(DP)
+	INC 	HL
 	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
 	JR	Z,ERROR	;NOT SET ERROR
 	LD	DE,OK
@@ -77,7 +78,7 @@ _PATCH	DB	0
 
 ; Inner Interpreter
 
-SEMI:	DW	*+2
+SEMI:	DW	$ + 2
 	LD	C,(IX+0)
 	INC	IX
 	LD	B,(IX+0)
@@ -108,7 +109,7 @@ COLON:	DEC	IX
 ;
 	DB	7,'E','X','E'	; Header for dictionary search
 	DW	0		; Link address 0000 == End of Linked List.
-EXECUTE: DW	*+2		; Address of EXECUTE.
+EXECUTE: DW	$ + 2		; Address of EXECUTE.
 	POP	HL		; primitive code.
 	JR	RUN
 
