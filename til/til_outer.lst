@@ -10,14 +10,14 @@ Line   Addr Opcode      Label   Instruction
 0006   0000             ; START/RESTART
 0007   0000             	ORG	$8000
 0008   8000             
-0009   8000 11 0C 82    START:	LD	DE,RSTMSG
+0009   8000 11 0C 81    START	LD	DE,RSTMSG
 0010   8003 3A 88 80    	LD	A,(BASE)
 0011   8006 A7          	AND	A
 0012   8007 20 08       	JR	NZ, ABORT
 0013   8009 3E 0A       	LD	A,10
 0014   800B 32 88 80    	LD	(BASE),A
-0015   800E 11 19 82    	LD	DE,SRTMSG
-0016   8011 31 09 82    ABORT:	LD	SP,STACK
+0015   800E 11 19 81    	LD	DE,SRTMSG
+0016   8011 31 00 F0    ABORT	LD	SP,STACK
 0017   8014 D5          	PUSH	DE
 0018   8015 21 00 00    	LD	HL,0
 0019   8018 22 89 80    	LD	(MODE),HL
@@ -30,7 +30,7 @@ Line   Addr Opcode      Label   Instruction
 0026   802F             
 0027   802F             
 0028   802F             ; TYPE
-0029   802F             OUTER:
+0029   802F             OUTER
 0030   802F             
 0031   802F             ; INLINE
 0032   802F             
@@ -53,54 +53,54 @@ Line   Addr Opcode      Label   Instruction
 0049   802F             ; YES -> QUESTION
 0050   802F             
 0051   802F             ; QUESTION
-0052   802F             QUESTION:
+0052   802F             QUESTION
 0053   802F 31 80       	DW	$+2
-0054   8031 2A 0A 82    	LD 	HL,(DP)
+0054   8031 2A 0A 81    	LD 	HL,(DP)
 0055   8034 23          	INC 	HL
 0056   8035 CB 7E       	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
 0057   8037 28 06       	JR	Z,ERROR	;NOT SET ERROR
 0058   8039 11 53 80    	LD	DE,OK
 0059   803C D5          	PUSH	DE
 0060   803D FD E9       	JP	(IY)
-0061   803F CD 50 80    ERROR:	CALL	_CRLF
+0061   803F CD 50 80    ERROR	CALL	_CRLF
 0062   8042 FD 21 49 80 	LD	IY,RETURN
 0063   8046 C3 4F 80    	JP	_TYPE
-0064   8049 11 51 80    RETURN:	LD	DE, QMSG
+0064   8049 11 51 80    RETURN	LD	DE, QMSG
 0065   804C C3 56 80    	JP	_PATCH
 0066   804F             
 0067   804F             ; GOTO TYPE
 0068   804F             
 0069   804F             
 0070   804F             ; Internals
-0071   804F 00          _TYPE:	DB	0
+0071   804F 00          _TYPE	DB	0
 0072   8050 00          _CRLF	DB	0
-0073   8051 3F          QMSG	DB	'?'
-0074   8052 00          	DB	0
-0075   8053 4F 4B 00    OK	DB	'OK',0
-0076   8056             
+0073   8051 3F 00       QMSG	DB	'?', 0
+0074   8053 4F 4B 00    OK	DB	'OK',0
+0075   8056             
+0076   8056             ; PATCH internal routine.
 0077   8056 00          _PATCH	DB	0
 0078   8057             
 0079   8057             ; Inner Interpreter
 0080   8057             
-0081   8057 59 80       SEMI:	DW	$ + 2
+0081   8057 59 80       SEMI	DW	$ + 2
 0082   8059 DD 4E 00    	LD	C,(IX+0)
 0083   805C DD 23       	INC	IX
 0084   805E DD 46 00    	LD	B,(IX+0)
 0085   8061 DD 23       	INC	IX
-0086   8063 0A          NEXT:	LD	A,(BC)
+0086   8063 0A          NEXT	LD	A,(BC)
 0087   8064 6F          	LD	L,A
 0088   8065 03          	INC	BC
 0089   8066 0A          	LD	A,(BC)
 0090   8067 67          	LD	H,A
 0091   8068 03          	INC	BC
-0092   8069 5E          RUN:	LD	E,(HL)
+0092   8069 5E          RUN	LD	E,(HL)
 0093   806A 23          	INC	HL
 0094   806B 56          	LD	D,(HL)
 0095   806C 23          	INC	HL
 0096   806D EB          	EX	DE,HL
 0097   806E E9          	JP	(HL)
 0098   806F             
-0099   806F DD 2B       COLON:	DEC	IX
+0099   806F DD 2B       COLON	DEC	IX
 0100   8071 DD 70 00    	LD	(IX+0),B
 0101   8074 DD 2B       	DEC	IX
 0102   8076 DD 71 00    	LD	(IX+0),C
@@ -113,16 +113,16 @@ Line   Addr Opcode      Label   Instruction
 0109   807D             ;
 0110   807D 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
 0111   8081 00 00       	DW	0		; Link address 0000 == End of Linked List.
-0112   8083 85 80       EXECUTE: DW	$ + 2		; Address of EXECUTE.
+0112   8083 85 80       EXECUTE DW	$ + 2		; Address of EXECUTE.
 0113   8085 E1          	POP	HL		; primitive code.
 0114   8086 18 E1       	JR	RUN
 0115   8088             
 0116   8088             ; ***
 0117   8088             
 0118   8088             ; Variables
-0119   8088 00          BASE	DB	0
-0120   8089 00          MODE	DB	0
-0121   808A 00 00 00 00 LBEND	DS	128
+0119   8088 00          BASE	DB	0	; BASE for restart/warm start
+0120   8089 00          MODE	DB	0	; MODE
+0121   808A 00 00 00 00 LBEND	DS	128	; text input buffer
 0121   808E 00 00 00 00 
 0121   8092 00 00 00 00 
 0121   8096 00 00 00 00 
@@ -155,84 +155,26 @@ Line   Addr Opcode      Label   Instruction
 0121   8102 00 00 00 00 
 0121   8106 00 00 00 00 
 0122   810A             
-0123   810A 00 00 00 00 STK	DS	255
-0123   810E 00 00 00 00 
-0123   8112 00 00 00 00 
-0123   8116 00 00 00 00 
-0123   811A 00 00 00 00 
-0123   811E 00 00 00 00 
-0123   8122 00 00 00 00 
-0123   8126 00 00 00 00 
-0123   812A 00 00 00 00 
-0123   812E 00 00 00 00 
-0123   8132 00 00 00 00 
-0123   8136 00 00 00 00 
-0123   813A 00 00 00 00 
-0123   813E 00 00 00 00 
-0123   8142 00 00 00 00 
-0123   8146 00 00 00 00 
-0123   814A 00 00 00 00 
-0123   814E 00 00 00 00 
-0123   8152 00 00 00 00 
-0123   8156 00 00 00 00 
-0123   815A 00 00 00 00 
-0123   815E 00 00 00 00 
-0123   8162 00 00 00 00 
-0123   8166 00 00 00 00 
-0123   816A 00 00 00 00 
-0123   816E 00 00 00 00 
-0123   8172 00 00 00 00 
-0123   8176 00 00 00 00 
-0123   817A 00 00 00 00 
-0123   817E 00 00 00 00 
-0123   8182 00 00 00 00 
-0123   8186 00 00 00 00 
-0123   818A 00 00 00 00 
-0123   818E 00 00 00 00 
-0123   8192 00 00 00 00 
-0123   8196 00 00 00 00 
-0123   819A 00 00 00 00 
-0123   819E 00 00 00 00 
-0123   81A2 00 00 00 00 
-0123   81A6 00 00 00 00 
-0123   81AA 00 00 00 00 
-0123   81AE 00 00 00 00 
-0123   81B2 00 00 00 00 
-0123   81B6 00 00 00 00 
-0123   81BA 00 00 00 00 
-0123   81BE 00 00 00 00 
-0123   81C2 00 00 00 00 
-0123   81C6 00 00 00 00 
-0123   81CA 00 00 00 00 
-0123   81CE 00 00 00 00 
-0123   81D2 00 00 00 00 
-0123   81D6 00 00 00 00 
-0123   81DA 00 00 00 00 
-0123   81DE 00 00 00 00 
-0123   81E2 00 00 00 00 
-0123   81E6 00 00 00 00 
-0123   81EA 00 00 00 00 
-0123   81EE 00 00 00 00 
-0123   81F2 00 00 00 00 
-0123   81F6 00 00 00 00 
-0123   81FA 00 00 00 00 
-0123   81FE 00 00 00 00 
-0123   8202 00 00 00 00 
-0123   8206 00 00 00    
-0124   8209 00          STACK	DB	0
-0125   820A             
-0126   820A 00 00       DP	DW	0
-0127   820C             
-0128   820C             ; Strings
-0129   820C 20 54 49 4C RSTMSG	DB	' TIL Restart', 0
-0129   8210 20 52 65 73 
-0129   8214 74 61 72 74 
-0129   8218 00          
-0130   8219 20 48 65 6C SRTMSG	DB	' Hello, I',39, 'm a Til',0
-0130   821D 6C 6F 2C 20 
-0130   8221 49 27 6D 20 
-0130   8225 61 20 54 69 
-0130   8229 6C 00       
-0131   822B             
-0132   822B             
+0123   810A             ; Dictonary pointer
+0124   810A 00 00       DP	DW	0
+0125   810C             
+0126   810C             ; Strings
+0127   810C 20 54 49 4C RSTMSG	DB	' TIL Restart', 0
+0127   8110 20 52 65 73 
+0127   8114 74 61 72 74 
+0127   8118 00          
+0128   8119 20 48 65 6C SRTMSG	DB	' Hello, I',39, 'm a Til',0
+0128   811D 6C 6F 2C 20 
+0128   8121 49 27 6D 20 
+0128   8125 61 20 54 69 
+0128   8129 6C 00       
+0129   812B             
+0130   812B             ; Stack grows down... set this at F000
+0131   812B             	ORG	$F000
+0132   F000             ;STK	DS	255
+0133   F000 00          STACK	DB	0
+0134   F001             
+0135   F001             
+0136   F001             
+0137   F001             
 Number of errors = 0

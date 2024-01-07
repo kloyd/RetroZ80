@@ -6,14 +6,14 @@
 ; START/RESTART
 	ORG	$8000
 
-START:	LD	DE,RSTMSG
+START	LD	DE,RSTMSG
 	LD	A,(BASE)
 	AND	A
 	JR	NZ, ABORT
 	LD	A,10
 	LD	(BASE),A
 	LD	DE,SRTMSG
-ABORT:	LD	SP,STACK
+ABORT	LD	SP,STACK
 	PUSH	DE
 	LD	HL,0
 	LD	(MODE),HL
@@ -26,7 +26,7 @@ ABORT:	LD	SP,STACK
 
 
 ; TYPE
-OUTER:
+OUTER
 
 ; INLINE
 
@@ -49,7 +49,7 @@ OUTER:
 ; YES -> QUESTION
 
 ; QUESTION
-QUESTION:
+QUESTION
 	DW	$+2
 	LD 	HL,(DP)
 	INC 	HL
@@ -58,45 +58,45 @@ QUESTION:
 	LD	DE,OK
 	PUSH	DE
 	JP	(IY)
-ERROR:	CALL	_CRLF
+ERROR	CALL	_CRLF
 	LD	IY,RETURN
 	JP	_TYPE
-RETURN:	LD	DE, QMSG
+RETURN	LD	DE, QMSG
 	JP	_PATCH
 
 ; GOTO TYPE
 
 
 ; Internals
-_TYPE:	DB	0
+_TYPE	DB	0
 _CRLF	DB	0
-QMSG	DB	'?'
-	DB	0
+QMSG	DB	'?', 0
 OK	DB	'OK',0
 
+; PATCH internal routine.
 _PATCH	DB	0
 
 ; Inner Interpreter
 
-SEMI:	DW	$ + 2
+SEMI	DW	$ + 2
 	LD	C,(IX+0)
 	INC	IX
 	LD	B,(IX+0)
 	INC	IX
-NEXT:	LD	A,(BC)
+NEXT	LD	A,(BC)
 	LD	L,A
 	INC	BC
 	LD	A,(BC)
 	LD	H,A
 	INC	BC
-RUN:	LD	E,(HL)
+RUN	LD	E,(HL)
 	INC	HL
 	LD	D,(HL)
 	INC	HL
 	EX	DE,HL
 	JP	(HL)
 
-COLON:	DEC	IX
+COLON	DEC	IX
 	LD	(IX+0),B
 	DEC	IX
 	LD	(IX+0),C
@@ -109,24 +109,29 @@ COLON:	DEC	IX
 ;
 	DB	7,'E','X','E'	; Header for dictionary search
 	DW	0		; Link address 0000 == End of Linked List.
-EXECUTE: DW	$ + 2		; Address of EXECUTE.
+EXECUTE DW	$ + 2		; Address of EXECUTE.
 	POP	HL		; primitive code.
 	JR	RUN
 
 ; ***
 
 ; Variables
-BASE	DB	0
-MODE	DB	0
-LBEND	DS	128
+BASE	DB	0	; BASE for restart/warm start
+MODE	DB	0	; MODE
+LBEND	DS	128	; text input buffer
 
-STK	DS	255
-STACK	DB	0
-
+; Dictonary pointer
 DP	DW	0
 
 ; Strings
 RSTMSG	DB	' TIL Restart', 0
 SRTMSG	DB	' Hello, I',39, 'm a Til',0
+
+; Stack grows down... set this at F000
+	ORG	$F000
+;STK	DS	255
+STACK	DB	0
+
+
 
 
