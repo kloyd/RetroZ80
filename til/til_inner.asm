@@ -14,7 +14,7 @@
 ; Assuming a ROM at address 0 and RAM at &8000 (32768)
 ;
 	ORG	$8000
-SEMI:	DW	* + 2
+SEMI:	DW	$ + 2
 	LD	C,(IX+0)
 	INC	IX
 	LD	B,(IX+0)
@@ -45,7 +45,7 @@ COLON:	DEC	IX
 ;
 	DB	7,'E','X','E'	; Header for dictionary search
 	DW	0		; Link address 0000 == End of Linked List.
-EXECUTE: DW	*+2		; Address of EXECUTE.
+EXECUTE: DW	$ + 2		; Address of EXECUTE.
 	POP	HL		; primitive code.
 	JR	RUN
 
