@@ -14,7 +14,7 @@
 ; Assuming a ROM at address 0 and RAM at &8000 (32768)
 ;
 	ORG	$8000
-SEMI:	DW	*+2
+SEMI:	DW	* + 2
 	LD	C,(IX+0)
 	INC	IX
 	LD	B,(IX+0)
