@@ -16,7 +16,7 @@ Line   Addr Opcode      Label   Instruction
 0012   8007 20 08       	JR	NZ, ABORT
 0013   8009 3E 0A       	LD	A,10
 0014   800B 32 88 80    	LD	(BASE),A
-0015   800E 11 18 82    	LD	DE,SRTMSG
+0015   800E 11 19 82    	LD	DE,SRTMSG
 0016   8011 31 09 82    ABORT:	LD	SP,STACK
 0017   8014 D5          	PUSH	DE
 0018   8015 21 00 00    	LD	HL,0
@@ -65,7 +65,7 @@ Line   Addr Opcode      Label   Instruction
 0061   803F CD 50 80    ERROR:	CALL	_CRLF
 0062   8042 FD 21 49 80 	LD	IY,RETURN
 0063   8046 C3 4F 80    	JP	_TYPE
-0064   8049 11 51 80    RETURN:	LD	DE,MSG?
+0064   8049 11 51 80    RETURN:	LD	DE, QMSG
 0065   804C C3 56 80    	JP	_PATCH
 0066   804F             
 0067   804F             ; GOTO TYPE
@@ -74,7 +74,7 @@ Line   Addr Opcode      Label   Instruction
 0070   804F             ; Internals
 0071   804F 00          _TYPE:	DB	0
 0072   8050 00          _CRLF	DB	0
-0073   8051 3F          MSG?	DB	'?'
+0073   8051 3F          QMSG	DB	'?'
 0074   8052 00          	DB	0
 0075   8053 4F 4B 00    OK	DB	'OK',0
 0076   8056             
@@ -224,14 +224,15 @@ Line   Addr Opcode      Label   Instruction
 0126   820A 00 00       DP	DW	0
 0127   820C             
 0128   820C             ; Strings
-0129   820C 20 54 49 4C RSTMSG	DB	' TIL Restart'
+0129   820C 20 54 49 4C RSTMSG	DB	' TIL Restart', 0
 0129   8210 20 52 65 73 
 0129   8214 74 61 72 74 
-0130   8218 20 48 65 6C SRTMSG	DB	' Hello, I'm a Til'
-0130   821C 6C 6F 2C 20 
-0130   8220 49 27 6D 20 
-0130   8224 61 20 54 69 
-0130   8228 6C          
-0131   8229             
-0132   8229             
+0129   8218 00          
+0130   8219 20 48 65 6C SRTMSG	DB	' Hello, I',39, 'm a Til',0
+0130   821D 6C 6F 2C 20 
+0130   8221 49 27 6D 20 
+0130   8225 61 20 54 69 
+0130   8229 6C 00       
+0131   822B             
+0132   822B             
 Number of errors = 0

@@ -61,7 +61,7 @@ QUESTION:
 ERROR:	CALL	_CRLF
 	LD	IY,RETURN
 	JP	_TYPE
-RETURN:	LD	DE,MSG?
+RETURN:	LD	DE, QMSG
 	JP	_PATCH
 
 ; GOTO TYPE
@@ -70,7 +70,7 @@ RETURN:	LD	DE,MSG?
 ; Internals
 _TYPE:	DB	0
 _CRLF	DB	0
-MSG?	DB	'?'
+QMSG	DB	'?'
 	DB	0
 OK	DB	'OK',0
 
@@ -126,7 +126,7 @@ STACK	DB	0
 DP	DW	0
 
 ; Strings
-RSTMSG	DB	' TIL Restart'
-SRTMSG	DB	' Hello, I'm a Til'
+RSTMSG	DB	' TIL Restart', 0
+SRTMSG	DB	' Hello, I',39, 'm a Til',0
 
 
