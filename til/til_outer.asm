@@ -21,14 +21,38 @@ ABORT	LD	SP,STACK
 	LD	IX,RETURN
 	LD	HL,8080
 	LD	(LBEND),HL
-	LD	BC,OUTER
-	JP	NEXT
+	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
+	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
 
 ; TYPE
 OUTER
 
 ; INLINE
+INLINE	DW	$ + 2	;header address
+ISTART	PUSH	BC
+	CALL	_CRLF	; Issue CR / LF on terminal for new input
+	LD	HL, LBADD	; Buffer
+	LD	(LBP), HL
+	LD	B, LENGTH
+CLEAR	LD	(HL), 20H
+	INC	HL
+	DJNZ	CLEAR
+ZERO	LD	L,0
+INKEY	CALL	_KEY
+	CP	18H	; CTRL-X is Line Delete
+	JR	NZ,TSTBS
+	CALL	_ECHO
+	JR ISTART
+TSTBS	CP	08H	; backspace CTRL-H
+	JR	NZ, TSTCR
+	DEC	HL
+	JP	M,ZERO
+	LD	(HL), 20H
+ISSUE	CALL	_ECHO
+	JR	INKEY
+TSTCR	CP	0DH	; CR
+
 
 ; ASPACE
 
@@ -114,18 +138,33 @@ EXECUTE DW	$ + 2		; Address of EXECUTE.
 	JR	RUN
 
 ; ***
+; Machine Specific routines
+; KEY
+_KEY	DW	0
+
+
+; ECHO
+_ECHO	DW	0
+
+
+; Constants
+;
+LINEDEL	EQU	18H	; ctrl-x line delete
 
 ; Variables
 BASE	DB	0	; BASE for restart/warm start
 MODE	DB	0	; MODE
+LBP	DW	0 	; line buffer pointer
+LENGTH	EQU	128	; buffer length
 LBEND	DS	128	; text input buffer
+LBADD	DW	0
 
 ; Dictonary pointer
 DP	DW	0
 
 ; Strings
-RSTMSG	DB	' TIL Restart', 0
-SRTMSG	DB	' Hello, I',39, 'm a Til',0
+RSTMSG	DB	' TIL RESTART', 0
+SRTMSG	DB	' WELCOME TO RETRO TIL',0
 
 ; Stack grows down... set this at F000
 	ORG	$F000

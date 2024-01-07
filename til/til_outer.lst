@@ -10,171 +10,211 @@ Line   Addr Opcode      Label   Instruction
 0006   0000             ; START/RESTART
 0007   0000             	ORG	$8000
 0008   8000             
-0009   8000 11 0C 81    START	LD	DE,RSTMSG
-0010   8003 3A 88 80    	LD	A,(BASE)
+0009   8000 11 46 81    START	LD	DE,RSTMSG
+0010   8003 3A BE 80    	LD	A,(BASE)
 0011   8006 A7          	AND	A
 0012   8007 20 08       	JR	NZ, ABORT
 0013   8009 3E 0A       	LD	A,10
-0014   800B 32 88 80    	LD	(BASE),A
-0015   800E 11 19 81    	LD	DE,SRTMSG
+0014   800B 32 BE 80    	LD	(BASE),A
+0015   800E 11 53 81    	LD	DE,SRTMSG
 0016   8011 31 00 F0    ABORT	LD	SP,STACK
 0017   8014 D5          	PUSH	DE
 0018   8015 21 00 00    	LD	HL,0
-0019   8018 22 89 80    	LD	(MODE),HL
-0020   801B FD 21 63 80 	LD	IY,NEXT
-0021   801F DD 21 49 80 	LD	IX,RETURN
+0019   8018 22 BF 80    	LD	(MODE),HL
+0020   801B FD 21 95 80 	LD	IY,NEXT
+0021   801F DD 21 7B 80 	LD	IX,RETURN
 0022   8023 21 90 1F    	LD	HL,8080
-0023   8026 22 8A 80    	LD	(LBEND),HL
-0024   8029 01 2F 80    	LD	BC,OUTER
-0025   802C C3 63 80    	JP	NEXT
+0023   8026 22 C2 80    	LD	(LBEND),HL
+0024   8029 01 2F 80    	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
+0025   802C C3 95 80    	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 0026   802F             
 0027   802F             
 0028   802F             ; TYPE
 0029   802F             OUTER
 0030   802F             
 0031   802F             ; INLINE
-0032   802F             
-0033   802F             ; ASPACE
-0034   802F             
-0035   802F             ; TOKEN
-0036   802F             
-0037   802F             ; ?SEARCH
-0038   802F             
-0039   802F             ; ABSENT?
-0040   802F             ; - NO -> ?EXECUTE -> ASPACE
-0041   802F             ; - YES -> NUMBER
-0042   802F             
-0043   802F             ; ?EXECUTE
-0044   802F             
-0045   802F             ; ?NUMBER
-0046   802F             
-0047   802F             ; INVALID NUMBER?
-0048   802F             ; NO -> ASPACE
-0049   802F             ; YES -> QUESTION
-0050   802F             
-0051   802F             ; QUESTION
-0052   802F             QUESTION
-0053   802F 31 80       	DW	$+2
-0054   8031 2A 0A 81    	LD 	HL,(DP)
-0055   8034 23          	INC 	HL
-0056   8035 CB 7E       	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
-0057   8037 28 06       	JR	Z,ERROR	;NOT SET ERROR
-0058   8039 11 53 80    	LD	DE,OK
-0059   803C D5          	PUSH	DE
-0060   803D FD E9       	JP	(IY)
-0061   803F CD 50 80    ERROR	CALL	_CRLF
-0062   8042 FD 21 49 80 	LD	IY,RETURN
-0063   8046 C3 4F 80    	JP	_TYPE
-0064   8049 11 51 80    RETURN	LD	DE, QMSG
-0065   804C C3 56 80    	JP	_PATCH
-0066   804F             
-0067   804F             ; GOTO TYPE
-0068   804F             
-0069   804F             
-0070   804F             ; Internals
-0071   804F 00          _TYPE	DB	0
-0072   8050 00          _CRLF	DB	0
-0073   8051 3F 00       QMSG	DB	'?', 0
-0074   8053 4F 4B 00    OK	DB	'OK',0
-0075   8056             
-0076   8056             ; PATCH internal routine.
-0077   8056 00          _PATCH	DB	0
-0078   8057             
-0079   8057             ; Inner Interpreter
-0080   8057             
-0081   8057 59 80       SEMI	DW	$ + 2
-0082   8059 DD 4E 00    	LD	C,(IX+0)
-0083   805C DD 23       	INC	IX
-0084   805E DD 46 00    	LD	B,(IX+0)
-0085   8061 DD 23       	INC	IX
-0086   8063 0A          NEXT	LD	A,(BC)
-0087   8064 6F          	LD	L,A
-0088   8065 03          	INC	BC
-0089   8066 0A          	LD	A,(BC)
-0090   8067 67          	LD	H,A
-0091   8068 03          	INC	BC
-0092   8069 5E          RUN	LD	E,(HL)
-0093   806A 23          	INC	HL
-0094   806B 56          	LD	D,(HL)
-0095   806C 23          	INC	HL
-0096   806D EB          	EX	DE,HL
-0097   806E E9          	JP	(HL)
-0098   806F             
-0099   806F DD 2B       COLON	DEC	IX
-0100   8071 DD 70 00    	LD	(IX+0),B
-0101   8074 DD 2B       	DEC	IX
-0102   8076 DD 71 00    	LD	(IX+0),C
-0103   8079 4B          	LD	C,E
-0104   807A 42          	LD	B,D
-0105   807B FD E9       	JP	(IY)
-0106   807D             
-0107   807D             ; EXECUTE primitive needs a dictionary entry for defining words.
-0108   807D             ; This is a model for all other Primitive words that will be added to the dictionary
-0109   807D             ;
-0110   807D 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
-0111   8081 00 00       	DW	0		; Link address 0000 == End of Linked List.
-0112   8083 85 80       EXECUTE DW	$ + 2		; Address of EXECUTE.
-0113   8085 E1          	POP	HL		; primitive code.
-0114   8086 18 E1       	JR	RUN
-0115   8088             
-0116   8088             ; ***
-0117   8088             
-0118   8088             ; Variables
-0119   8088 00          BASE	DB	0	; BASE for restart/warm start
-0120   8089 00          MODE	DB	0	; MODE
-0121   808A 00 00 00 00 LBEND	DS	128	; text input buffer
-0121   808E 00 00 00 00 
-0121   8092 00 00 00 00 
-0121   8096 00 00 00 00 
-0121   809A 00 00 00 00 
-0121   809E 00 00 00 00 
-0121   80A2 00 00 00 00 
-0121   80A6 00 00 00 00 
-0121   80AA 00 00 00 00 
-0121   80AE 00 00 00 00 
-0121   80B2 00 00 00 00 
-0121   80B6 00 00 00 00 
-0121   80BA 00 00 00 00 
-0121   80BE 00 00 00 00 
-0121   80C2 00 00 00 00 
-0121   80C6 00 00 00 00 
-0121   80CA 00 00 00 00 
-0121   80CE 00 00 00 00 
-0121   80D2 00 00 00 00 
-0121   80D6 00 00 00 00 
-0121   80DA 00 00 00 00 
-0121   80DE 00 00 00 00 
-0121   80E2 00 00 00 00 
-0121   80E6 00 00 00 00 
-0121   80EA 00 00 00 00 
-0121   80EE 00 00 00 00 
-0121   80F2 00 00 00 00 
-0121   80F6 00 00 00 00 
-0121   80FA 00 00 00 00 
-0121   80FE 00 00 00 00 
-0121   8102 00 00 00 00 
-0121   8106 00 00 00 00 
-0122   810A             
-0123   810A             ; Dictonary pointer
-0124   810A 00 00       DP	DW	0
-0125   810C             
-0126   810C             ; Strings
-0127   810C 20 54 49 4C RSTMSG	DB	' TIL Restart', 0
-0127   8110 20 52 65 73 
-0127   8114 74 61 72 74 
-0127   8118 00          
-0128   8119 20 48 65 6C SRTMSG	DB	' Hello, I',39, 'm a Til',0
-0128   811D 6C 6F 2C 20 
-0128   8121 49 27 6D 20 
-0128   8125 61 20 54 69 
-0128   8129 6C 00       
-0129   812B             
-0130   812B             ; Stack grows down... set this at F000
-0131   812B             	ORG	$F000
-0132   F000             ;STK	DS	255
-0133   F000 00          STACK	DB	0
-0134   F001             
-0135   F001             
-0136   F001             
-0137   F001             
+0032   802F 31 80       INLINE	DW	$ + 2	;header address
+0033   8031 C5          ISTART	PUSH	BC
+0034   8032 CD 82 80    	CALL	_CRLF	; Issue CR / LF on terminal for new input
+0035   8035 21 42 81    	LD	HL, LBADD	; Buffer
+0036   8038 22 C0 80    	LD	(LBP), HL
+0037   803B 06 80       	LD	B, LENGTH
+0038   803D 36 20       CLEAR	LD	(HL), 20H
+0039   803F 23          	INC	HL
+0040   8040 10 FB       	DJNZ	CLEAR
+0041   8042 2E 00       ZERO	LD	L,0
+0042   8044 CD BA 80    INKEY	CALL	_KEY
+0043   8047 FE 18       	CP	18H	; CTRL-X is Line Delete
+0044   8049 20 05       	JR	NZ,TSTBS
+0045   804B CD BC 80    	CALL	_ECHO
+0046   804E 18 E1       	JR ISTART
+0047   8050 FE 08       TSTBS	CP	08H	; backspace CTRL-H
+0048   8052 20 0B       	JR	NZ, TSTCR
+0049   8054 2B          	DEC	HL
+0050   8055 FA 42 80    	JP	M,ZERO
+0051   8058 36 20       	LD	(HL), 20H
+0052   805A CD BC 80    ISSUE	CALL	_ECHO
+0053   805D 18 E5       	JR	INKEY
+0054   805F FE 0D       TSTCR	CP	0DH	; CR
+0055   8061             
+0056   8061             
+0057   8061             ; ASPACE
+0058   8061             
+0059   8061             ; TOKEN
+0060   8061             
+0061   8061             ; ?SEARCH
+0062   8061             
+0063   8061             ; ABSENT?
+0064   8061             ; - NO -> ?EXECUTE -> ASPACE
+0065   8061             ; - YES -> NUMBER
+0066   8061             
+0067   8061             ; ?EXECUTE
+0068   8061             
+0069   8061             ; ?NUMBER
+0070   8061             
+0071   8061             ; INVALID NUMBER?
+0072   8061             ; NO -> ASPACE
+0073   8061             ; YES -> QUESTION
+0074   8061             
+0075   8061             ; QUESTION
+0076   8061             QUESTION
+0077   8061 63 80       	DW	$+2
+0078   8063 2A 44 81    	LD 	HL,(DP)
+0079   8066 23          	INC 	HL
+0080   8067 CB 7E       	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
+0081   8069 28 06       	JR	Z,ERROR	;NOT SET ERROR
+0082   806B 11 85 80    	LD	DE,OK
+0083   806E D5          	PUSH	DE
+0084   806F FD E9       	JP	(IY)
+0085   8071 CD 82 80    ERROR	CALL	_CRLF
+0086   8074 FD 21 7B 80 	LD	IY,RETURN
+0087   8078 C3 81 80    	JP	_TYPE
+0088   807B 11 83 80    RETURN	LD	DE, QMSG
+0089   807E C3 88 80    	JP	_PATCH
+0090   8081             
+0091   8081             ; GOTO TYPE
+0092   8081             
+0093   8081             
+0094   8081             ; Internals
+0095   8081 00          _TYPE	DB	0
+0096   8082 00          _CRLF	DB	0
+0097   8083 3F 00       QMSG	DB	'?', 0
+0098   8085 4F 4B 00    OK	DB	'OK',0
+0099   8088             
+0100   8088             ; PATCH internal routine.
+0101   8088 00          _PATCH	DB	0
+0102   8089             
+0103   8089             ; Inner Interpreter
+0104   8089             
+0105   8089 8B 80       SEMI	DW	$ + 2
+0106   808B DD 4E 00    	LD	C,(IX+0)
+0107   808E DD 23       	INC	IX
+0108   8090 DD 46 00    	LD	B,(IX+0)
+0109   8093 DD 23       	INC	IX
+0110   8095 0A          NEXT	LD	A,(BC)
+0111   8096 6F          	LD	L,A
+0112   8097 03          	INC	BC
+0113   8098 0A          	LD	A,(BC)
+0114   8099 67          	LD	H,A
+0115   809A 03          	INC	BC
+0116   809B 5E          RUN	LD	E,(HL)
+0117   809C 23          	INC	HL
+0118   809D 56          	LD	D,(HL)
+0119   809E 23          	INC	HL
+0120   809F EB          	EX	DE,HL
+0121   80A0 E9          	JP	(HL)
+0122   80A1             
+0123   80A1 DD 2B       COLON	DEC	IX
+0124   80A3 DD 70 00    	LD	(IX+0),B
+0125   80A6 DD 2B       	DEC	IX
+0126   80A8 DD 71 00    	LD	(IX+0),C
+0127   80AB 4B          	LD	C,E
+0128   80AC 42          	LD	B,D
+0129   80AD FD E9       	JP	(IY)
+0130   80AF             
+0131   80AF             ; EXECUTE primitive needs a dictionary entry for defining words.
+0132   80AF             ; This is a model for all other Primitive words that will be added to the dictionary
+0133   80AF             ;
+0134   80AF 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
+0135   80B3 00 00       	DW	0		; Link address 0000 == End of Linked List.
+0136   80B5 B7 80       EXECUTE DW	$ + 2		; Address of EXECUTE.
+0137   80B7 E1          	POP	HL		; primitive code.
+0138   80B8 18 E1       	JR	RUN
+0139   80BA             
+0140   80BA             ; ***
+0141   80BA             ; Machine Specific routines
+0142   80BA             ; KEY
+0143   80BA 00 00       _KEY	DW	0
+0144   80BC             
+0145   80BC             
+0146   80BC             ; ECHO
+0147   80BC 00 00       _ECHO	DW	0
+0148   80BE             
+0149   80BE             
+0150   80BE             ; Constants
+0151   80BE             ;
+0152   80BE             LINEDEL	EQU	18H	; ctrl-x line delete
+0153   80BE             
+0154   80BE             ; Variables
+0155   80BE 00          BASE	DB	0	; BASE for restart/warm start
+0156   80BF 00          MODE	DB	0	; MODE
+0157   80C0 00 00       LBP	DW	0 	; line buffer pointer
+0158   80C2             LENGTH	EQU	128	; buffer length
+0159   80C2 00 00 00 00 LBEND	DS	128	; text input buffer
+0159   80C6 00 00 00 00 
+0159   80CA 00 00 00 00 
+0159   80CE 00 00 00 00 
+0159   80D2 00 00 00 00 
+0159   80D6 00 00 00 00 
+0159   80DA 00 00 00 00 
+0159   80DE 00 00 00 00 
+0159   80E2 00 00 00 00 
+0159   80E6 00 00 00 00 
+0159   80EA 00 00 00 00 
+0159   80EE 00 00 00 00 
+0159   80F2 00 00 00 00 
+0159   80F6 00 00 00 00 
+0159   80FA 00 00 00 00 
+0159   80FE 00 00 00 00 
+0159   8102 00 00 00 00 
+0159   8106 00 00 00 00 
+0159   810A 00 00 00 00 
+0159   810E 00 00 00 00 
+0159   8112 00 00 00 00 
+0159   8116 00 00 00 00 
+0159   811A 00 00 00 00 
+0159   811E 00 00 00 00 
+0159   8122 00 00 00 00 
+0159   8126 00 00 00 00 
+0159   812A 00 00 00 00 
+0159   812E 00 00 00 00 
+0159   8132 00 00 00 00 
+0159   8136 00 00 00 00 
+0159   813A 00 00 00 00 
+0159   813E 00 00 00 00 
+0160   8142 00 00       LBADD	DW	0
+0161   8144             
+0162   8144             ; Dictonary pointer
+0163   8144 00 00       DP	DW	0
+0164   8146             
+0165   8146             ; Strings
+0166   8146 20 54 49 4C RSTMSG	DB	' TIL RESTART', 0
+0166   814A 20 52 45 53 
+0166   814E 54 41 52 54 
+0166   8152 00          
+0167   8153 20 57 45 4C SRTMSG	DB	' WELCOME TO RETRO TIL',0
+0167   8157 43 4F 4D 45 
+0167   815B 20 54 4F 20 
+0167   815F 52 45 54 52 
+0167   8163 4F 20 54 49 
+0167   8167 4C 00       
+0168   8169             
+0169   8169             ; Stack grows down... set this at F000
+0170   8169             	ORG	$F000
+0171   F000             ;STK	DS	255
+0172   F000 00          STACK	DB	0
+0173   F001             
+0174   F001             
+0175   F001             
+0176   F001             
 Number of errors = 0
