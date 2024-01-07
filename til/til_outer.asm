@@ -4,7 +4,7 @@
 ; TIL
 
 ; START/RESTART
-	ORG	$8000
+	ORG	0x8000
 
 START	LD	DE,RSTMSG
 	LD	A,(BASE)
@@ -35,23 +35,23 @@ ISTART	PUSH	BC
 	LD	HL, LBADD	; Buffer
 	LD	(LBP), HL
 	LD	B, LENGTH
-CLEAR	LD	(HL), 20H
+CLEAR	LD	(HL), ASPACE
 	INC	HL
 	DJNZ	CLEAR
 ZERO	LD	L,0
 INKEY	CALL	_KEY
-	CP	18H	; CTRL-X is Line Delete
+	CP	LINEDEL		; CTRL-X is Line Delete
 	JR	NZ,TSTBS
 	CALL	_ECHO
 	JR ISTART
-TSTBS	CP	08H	; backspace CTRL-H
+TSTBS	CP	BKSP		; backspace CTRL-H
 	JR	NZ, TSTCR
 	DEC	HL
 	JP	M,ZERO
-	LD	(HL), 20H
+	LD	(HL), ASPACE
 ISSUE	CALL	_ECHO
 	JR	INKEY
-TSTCR	CP	0DH	; CR
+TSTCR	CP	CR
 
 
 ; ASPACE
@@ -140,16 +140,22 @@ EXECUTE DW	$ + 2		; Address of EXECUTE.
 ; ***
 ; Machine Specific routines
 ; KEY
-_KEY	DW	0
-
+;; Very simplistic using Z80 simulator terminal I/o
+_KEY	IN	A,(FFH)
+	RET
 
 ; ECHO
-_ECHO	DW	0
+_ECHO	OUT	(FFh), A
+	RET
+
 
 
 ; Constants
 ;
 LINEDEL	EQU	18H	; ctrl-x line delete
+ASPACE	EQU	20h	; space
+BKSP	EQU	08h	; ctrl-H backspace
+CR	EQU	0Dh	; carriage return
 
 ; Variables
 BASE	DB	0	; BASE for restart/warm start
@@ -167,7 +173,7 @@ RSTMSG	DB	' TIL RESTART', 0
 SRTMSG	DB	' WELCOME TO RETRO TIL',0
 
 ; Stack grows down... set this at F000
-	ORG	$F000
+	ORG	0xF000
 ;STK	DS	255
 STACK	DB	0
 
