@@ -122,6 +122,8 @@ LBEND	DS	128
 STK	DS	255
 STACK	DB	0
 
+DP	DW	0
+
 ; Strings
 RSTMSG	DB	' TIL Restart'
 SRTMSG	DB	' Hello, I'm a Til'
