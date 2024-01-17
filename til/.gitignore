@@ -1,4 +1,5 @@
 *.hex
 *.obj
+*.prn
 autosave
 

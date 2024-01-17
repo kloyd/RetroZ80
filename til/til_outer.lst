@@ -1,226 +1,200 @@
----------------------------------------------
-Z80 ASSEMBLER LISTING
-Line   Addr Opcode      Label   Instruction
----------------------------------------------
-0001   0000             ; TIL
-0002   0000             ; Outer Interpreter
-0003   0000             
-0004   0000             ; TIL
-0005   0000             
-0006   0000             ; START/RESTART
-0007   0000             	ORG	0x8000
-0008   8000             
-0009   8000 11 48 81    START	LD	DE,RSTMSG
-0010   8003 3A C0 80    	LD	A,(BASE)
-0011   8006 A7          	AND	A
-0012   8007 20 08       	JR	NZ, ABORT
-0013   8009 3E 0A       	LD	A,10
-0014   800B 32 C0 80    	LD	(BASE),A
-0015   800E 11 55 81    	LD	DE,SRTMSG
-0016   8011 31 00 F0    ABORT	LD	SP,STACK
-0017   8014 D5          	PUSH	DE
-0018   8015 21 00 00    	LD	HL,0
-0019   8018 22 C1 80    	LD	(MODE),HL
-0020   801B FD 21 95 80 	LD	IY,NEXT
-0021   801F DD 21 7B 80 	LD	IX,RETURN
-0022   8023 21 90 1F    	LD	HL,8080
-0023   8026 22 C4 80    	LD	(LBEND),HL
-0024   8029 01 2F 80    	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
-0025   802C C3 95 80    	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
-0026   802F             
-0027   802F             
-0028   802F             ; TYPE
-0029   802F             OUTER
-0030   802F             
-0031   802F             ; INLINE
-0032   802F 31 80       INLINE	DW	$ + 2	;header address
-0033   8031 C5          ISTART	PUSH	BC
-0034   8032 CD 82 80    	CALL	_CRLF	; Issue CR / LF on terminal for new input
-0035   8035 21 44 81    	LD	HL, LBADD	; Buffer
-0036   8038 22 C2 80    	LD	(LBP), HL
-0037   803B 06 80       	LD	B, LENGTH
-0038   803D 36 20       CLEAR	LD	(HL), ASPACE
-0039   803F 23          	INC	HL
-0040   8040 10 FB       	DJNZ	CLEAR
-0041   8042 2E 00       ZERO	LD	L,0
-0042   8044 CD BA 80    INKEY	CALL	_KEY
-0043   8047 FE 18       	CP	LINEDEL		; CTRL-X is Line Delete
-0044   8049 20 05       	JR	NZ,TSTBS
-0045   804B CD BD 80    	CALL	_ECHO
-0046   804E 18 E1       	JR ISTART
-0047   8050 FE 08       TSTBS	CP	BKSP		; backspace CTRL-H
-0048   8052 20 0B       	JR	NZ, TSTCR
-0049   8054 2B          	DEC	HL
-0050   8055 FA 42 80    	JP	M,ZERO
-0051   8058 36 20       	LD	(HL), ASPACE
-0052   805A CD BD 80    ISSUE	CALL	_ECHO
-0053   805D 18 E5       	JR	INKEY
-0054   805F FE 0D       TSTCR	CP	CR
-0055   8061             
-0056   8061             
-0057   8061             ; ASPACE
-0058   8061             
-0059   8061             ; TOKEN
-0060   8061             
-0061   8061             ; ?SEARCH
-0062   8061             
-0063   8061             ; ABSENT?
-0064   8061             ; - NO -> ?EXECUTE -> ASPACE
-0065   8061             ; - YES -> NUMBER
-0066   8061             
-0067   8061             ; ?EXECUTE
-0068   8061             
-0069   8061             ; ?NUMBER
-0070   8061             
-0071   8061             ; INVALID NUMBER?
-0072   8061             ; NO -> ASPACE
-0073   8061             ; YES -> QUESTION
-0074   8061             
-0075   8061             ; QUESTION
-0076   8061             QUESTION
-0077   8061 63 80       	DW	$+2
-0078   8063 2A 46 81    	LD 	HL,(DP)
-0079   8066 23          	INC 	HL
-0080   8067 CB 7E       	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
-0081   8069 28 06       	JR	Z,ERROR	;NOT SET ERROR
-0082   806B 11 85 80    	LD	DE,OK
-0083   806E D5          	PUSH	DE
-0084   806F FD E9       	JP	(IY)
-0085   8071 CD 82 80    ERROR	CALL	_CRLF
-0086   8074 FD 21 7B 80 	LD	IY,RETURN
-0087   8078 C3 81 80    	JP	_TYPE
-0088   807B 11 83 80    RETURN	LD	DE, QMSG
-0089   807E C3 88 80    	JP	_PATCH
-0090   8081             
-0091   8081             ; GOTO TYPE
-0092   8081             
-0093   8081             
-0094   8081             ; Internals
-0095   8081 00          _TYPE	DB	0
-0096   8082 00          _CRLF	DB	0
-0097   8083 3F 00       QMSG	DB	'?', 0
-0098   8085 4F 4B 00    OK	DB	'OK',0
-0099   8088             
-0100   8088             ; PATCH internal routine.
-0101   8088 00          _PATCH	DB	0
-0102   8089             
-0103   8089             ; Inner Interpreter
-0104   8089             
-0105   8089 8B 80       SEMI	DW	$ + 2
-0106   808B DD 4E 00    	LD	C,(IX+0)
-0107   808E DD 23       	INC	IX
-0108   8090 DD 46 00    	LD	B,(IX+0)
-0109   8093 DD 23       	INC	IX
-0110   8095 0A          NEXT	LD	A,(BC)
-0111   8096 6F          	LD	L,A
-0112   8097 03          	INC	BC
-0113   8098 0A          	LD	A,(BC)
-0114   8099 67          	LD	H,A
-0115   809A 03          	INC	BC
-0116   809B 5E          RUN	LD	E,(HL)
-0117   809C 23          	INC	HL
-0118   809D 56          	LD	D,(HL)
-0119   809E 23          	INC	HL
-0120   809F EB          	EX	DE,HL
-0121   80A0 E9          	JP	(HL)
-0122   80A1             
-0123   80A1 DD 2B       COLON	DEC	IX
-0124   80A3 DD 70 00    	LD	(IX+0),B
-0125   80A6 DD 2B       	DEC	IX
-0126   80A8 DD 71 00    	LD	(IX+0),C
-0127   80AB 4B          	LD	C,E
-0128   80AC 42          	LD	B,D
-0129   80AD FD E9       	JP	(IY)
-0130   80AF             
-0131   80AF             ; EXECUTE primitive needs a dictionary entry for defining words.
-0132   80AF             ; This is a model for all other Primitive words that will be added to the dictionary
-0133   80AF             ;
-0134   80AF 07 45 58 45 	DB	7,'E','X','E'	; Header for dictionary search
-0135   80B3 00 00       	DW	0		; Link address 0000 == End of Linked List.
-0136   80B5 B7 80       EXECUTE DW	$ + 2		; Address of EXECUTE.
-0137   80B7 E1          	POP	HL		; primitive code.
-0138   80B8 18 E1       	JR	RUN
-0139   80BA             
-0140   80BA             ; ***
-0141   80BA             ; Machine Specific routines
-0142   80BA             ; KEY
-0143   80BA             ;; Very simplistic using Z80 simulator terminal I/o
-0144   80BA DB FF       _KEY	IN	A,(FFH)
-0145   80BC C9          	RET
-0146   80BD             
-0147   80BD             ; ECHO
-0148   80BD D3 FF       _ECHO	OUT	(FFh), A
-0149   80BF C9          	RET
-0150   80C0             
-0151   80C0             
-0152   80C0             
-0153   80C0             ; Constants
-0154   80C0             ;
-0155   80C0             LINEDEL	EQU	18H	; ctrl-x line delete
-0156   80C0             ASPACE	EQU	20h	; space
-0157   80C0             BKSP	EQU	08h	; ctrl-H backspace
-0158   80C0             CR	EQU	0Dh	; carriage return
-0159   80C0             
-0160   80C0             ; Variables
-0161   80C0 00          BASE	DB	0	; BASE for restart/warm start
-0162   80C1 00          MODE	DB	0	; MODE
-0163   80C2 00 00       LBP	DW	0 	; line buffer pointer
-0164   80C4             LENGTH	EQU	128	; buffer length
-0165   80C4 00 00 00 00 LBEND	DS	128	; text input buffer
-0165   80C8 00 00 00 00 
-0165   80CC 00 00 00 00 
-0165   80D0 00 00 00 00 
-0165   80D4 00 00 00 00 
-0165   80D8 00 00 00 00 
-0165   80DC 00 00 00 00 
-0165   80E0 00 00 00 00 
-0165   80E4 00 00 00 00 
-0165   80E8 00 00 00 00 
-0165   80EC 00 00 00 00 
-0165   80F0 00 00 00 00 
-0165   80F4 00 00 00 00 
-0165   80F8 00 00 00 00 
-0165   80FC 00 00 00 00 
-0165   8100 00 00 00 00 
-0165   8104 00 00 00 00 
-0165   8108 00 00 00 00 
-0165   810C 00 00 00 00 
-0165   8110 00 00 00 00 
-0165   8114 00 00 00 00 
-0165   8118 00 00 00 00 
-0165   811C 00 00 00 00 
-0165   8120 00 00 00 00 
-0165   8124 00 00 00 00 
-0165   8128 00 00 00 00 
-0165   812C 00 00 00 00 
-0165   8130 00 00 00 00 
-0165   8134 00 00 00 00 
-0165   8138 00 00 00 00 
-0165   813C 00 00 00 00 
-0165   8140 00 00 00 00 
-0166   8144 00 00       LBADD	DW	0
-0167   8146             
-0168   8146             ; Dictonary pointer
-0169   8146 00 00       DP	DW	0
-0170   8148             
-0171   8148             ; Strings
-0172   8148 20 54 49 4C RSTMSG	DB	' TIL RESTART', 0
-0172   814C 20 52 45 53 
-0172   8150 54 41 52 54 
-0172   8154 00          
-0173   8155 20 57 45 4C SRTMSG	DB	' WELCOME TO RETRO TIL',0
-0173   8159 43 4F 4D 45 
-0173   815D 20 54 4F 20 
-0173   8161 52 45 54 52 
-0173   8165 4F 20 54 49 
-0173   8169 4C 00       
-0174   816B             
-0175   816B             ; Stack grows down... set this at F000
-0176   816B             	ORG	0xF000
-0177   F000             ;STK	DS	255
-0178   F000 00          STACK	DB	0
-0179   F001             
-0180   F001             
-0181   F001             
-0182   F001             
-Number of errors = 0
+                        ; TIL
+                        ; Outer Interpreter
+
+                        ; TIL
+
+                        ; START/RESTART
+8000                    	ORG	0x8000
+
+8000  11 4881           START	LD	DE,RSTMSG
+8003  3A C080           	LD	A,(BASE)
+8006  A7                	AND	A
+8007  20 08             	JR	NZ, ABORT
+8009  3E 0A             	LD	A,10
+800B  32 C080           	LD	(BASE),A
+800E  11 5581           	LD	DE,SRTMSG
+8011  31 00F0           ABORT	LD	SP,STACK
+8014  D5                	PUSH	DE
+8015  21 0000           	LD	HL,0
+8018  22 C180           	LD	(MODE),HL
+801B  FD21 9580         	LD	IY,NEXT
+801F  DD21 7B80         	LD	IX,RETURN
+8023  21 901F           	LD	HL,8080
+8026  22 C480           	LD	(LBEND),HL
+8029  01 2F80           	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
+802C  C3 9580           	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
+
+
+                        ; TYPE
+802F                    OUTER
+
+                        ; INLINE
+802F  3180              INLINE	DW	$ + 2	;header address
+8031  C5                ISTART	PUSH	BC
+8032  CD 8280           	CALL	_CRLF	; Issue CR / LF on terminal for new input
+8035  21 4481           	LD	HL, LBADD	; Buffer
+8038  22 C280           	LD	(LBP), HL
+803B  06 80             	LD	B, LENGTH
+803D  36 20             CLEAR	LD	(HL), ASPACE
+803F  23                	INC	HL
+8040  10 FB             	DJNZ	CLEAR
+8042  2E 00             ZERO	LD	L,0
+8044  CD BA80           INKEY	CALL	_KEY
+8047  FE 18             	CP	LINEDEL		; CTRL-X is Line Delete
+8049  20 05             	JR	NZ,TSTBS
+804B  CD BD80           	CALL	_ECHO
+804E  18 E1             	JR ISTART
+8050  FE 08             TSTBS	CP	BKSP		; backspace CTRL-H
+8052  20 0B             	JR	NZ, TSTCR
+8054  2B                	DEC	HL
+8055  FA 4280           	JP	M,ZERO
+8058  36 20             	LD	(HL), ASPACE
+805A  CD BD80           ISSUE	CALL	_ECHO
+805D  18 E5             	JR	INKEY
+805F  FE 0D             TSTCR	CP	CR
+
+
+                        ; ASPACE
+
+                        ; TOKEN
+
+                        ; ?SEARCH
+
+                        ; ABSENT?
+                        ; - NO -> ?EXECUTE -> ASPACE
+                        ; - YES -> NUMBER
+
+                        ; ?EXECUTE
+
+                        ; ?NUMBER
+
+                        ; INVALID NUMBER?
+                        ; NO -> ASPACE
+                        ; YES -> QUESTION
+
+                        ; QUESTION
+8061                    QUESTION
+8061  6380              	DW	$+2
+8063  2A 4681           	LD 	HL,(DP)
+8066  23                	INC 	HL
+8067  CB7E              	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
+8069  28 06             	JR	Z,ERROR	;NOT SET ERROR
+806B  11 8580           	LD	DE,OK
+806E  D5                	PUSH	DE
+806F  FDE9              	JP	(IY)
+8071  CD 8280           ERROR	CALL	_CRLF
+8074  FD21 7B80         	LD	IY,RETURN
+8078  C3 8180           	JP	_TYPE
+807B  11 8380           RETURN	LD	DE, QMSG
+807E  C3 8880           	JP	_PATCH
+
+                        ; GOTO TYPE
+
+
+                        ; Internals
+8081  00                _TYPE	DB	0
+8082  00                _CRLF	DB	0
+8083  3F00              QMSG	DB	'?', 0
+8085  4F4B00            OK	DB	'OK',0
+
+                        ; PATCH internal routine.
+8088  00                _PATCH	DB	0
+
+                        ; Inner Interpreter
+
+8089  8B80              SEMI	DW	$ + 2
+808B  DD4E 00           	LD	C,(IX+0)
+808E  DD23              	INC	IX
+8090  DD46 00           	LD	B,(IX+0)
+8093  DD23              	INC	IX
+8095  0A                NEXT	LD	A,(BC)
+8096  6F                	LD	L,A
+8097  03                	INC	BC
+8098  0A                	LD	A,(BC)
+8099  67                	LD	H,A
+809A  03                	INC	BC
+809B  5E                RUN	LD	E,(HL)
+809C  23                	INC	HL
+809D  56                	LD	D,(HL)
+809E  23                	INC	HL
+809F  EB                	EX	DE,HL
+80A0  E9                	JP	(HL)
+
+80A1  DD2B              COLON	DEC	IX
+80A3  DD70 00           	LD	(IX+0),B
+80A6  DD2B              	DEC	IX
+80A8  DD71 00           	LD	(IX+0),C
+80AB  4B                	LD	C,E
+80AC  42                	LD	B,D
+80AD  FDE9              	JP	(IY)
+
+                        ; EXECUTE primitive needs a dictionary entry for defining words.
+                        ; This is a model for all other Primitive words that will be added to the dictionary
+                        ;
+80AF  07455845          	DB	7,'E','X','E'	; Header for dictionary search
+80B3  0000              	DW	0		; Link address 0000 == End of Linked List.
+80B5  B780              EXECUTE DW	$ + 2		; Address of EXECUTE.
+80B7  E1                	POP	HL		; primitive code.
+80B8  18 E1             	JR	RUN
+
+                        ; ***
+                        ; Machine Specific routines
+                        ; KEY
+                        ;; Very simplistic using Z80 simulator terminal I/o
+80BA  DB FF             _KEY	IN	A,(FFH)
+80BC  C9                	RET
+
+                        ; ECHO
+80BD  D3 FF             _ECHO	OUT	(FFh), A
+80BF  C9                	RET
+
+
+
+                        ; Constants
+                        ;
+      = 0018            LINEDEL	EQU	18H	; ctrl-x line delete
+      = 0020            ASPACE	EQU	20h	; space
+      = 0008            BKSP	EQU	08h	; ctrl-H backspace
+      = 000D            CR	EQU	0Dh	; carriage return
+
+                        ; Variables
+80C0  00                BASE	DB	0	; BASE for restart/warm start
+80C1  00                MODE	DB	0	; MODE
+80C2  0000              LBP	DW	0 	; line buffer pointer
+      = 0080            LENGTH	EQU	128	; buffer length
+80C4   (0080)           LBEND	DS	128	; text input buffer
+8144  0000              LBADD	DW	0
+
+                        ; Dictonary pointer
+8146  0000              DP	DW	0
+
+                        ; Strings
+8148  2054494C 20524553 RSTMSG	DB	' TIL RESTART', 0
+8150  54415254 00
+8155  2057454C 434F4D45 SRTMSG	DB	' WELCOME TO RETRO TIL',0
+815D  20544F20 52455452
+8165  4F205449 4C00
+
+                        ; Stack grows down... set this at F000
+F000                    	ORG	0xF000
+                        ;STK	DS	255
+F000  00                STACK	DB	0
+
+
+
+
+
+ABORT              8011    ASPACE             0020 E  BASE               80C0
+BKSP               0008 E  CLEAR              803D    COLON              80A1
+CR                 000D E  DP                 8146    ERROR              8071
+EXECUTE            80B5    INKEY              8044    INLINE             802F
+ISSUE              805A    ISTART             8031    LBADD              8144
+LBEND              80C4    LBP                80C2    LENGTH             0080 E
+LINEDEL            0018 E  MODE               80C1    NEXT               8095
+OK                 8085    OUTER              802F    QMSG               8083
+QUESTION           8061    RETURN             807B    RSTMSG             8148
+RUN                809B    SEMI               8089    SRTMSG             8155
+STACK              F000    START              8000    TSTBS              8050
+TSTCR              805F    ZERO               8042    _CRLF              8082
+_ECHO              80BD    _KEY               80BA    _PATCH             8088
+_TYPE              8081
