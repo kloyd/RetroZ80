@@ -28,7 +28,7 @@
 8033  F1                        POP AF
 8034  C9                        RET
 
-8035                            END
+8035   (0000)                   END     0000
 
 CRLF               8028    DONE               8014    LOOP               8017
 MESG               801A    OUTS               8009    PUT_CHAR           13E8 E
