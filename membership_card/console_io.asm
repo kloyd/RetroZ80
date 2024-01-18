@@ -8,6 +8,7 @@ SET_IO  EQU     1382h
 
         LD      HL, MESG
 OUTS    LD      A,(HL)
+        CP      0
         JR      Z,DONE
         CALL    PUT_CHAR
         INC     HL
