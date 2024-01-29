@@ -1,0 +1,95 @@
+                        ;; Console I/O test for TIL design.
+
+                        ; Input Restrictions
+      = 00FF            BUFFER_SIZE EQU 255
+
+                        ;; Handy Constants
+      = 000D            CR	EQU     0DH
+      = 000A            LF	EQU     0AH
+      = 0024            DOLLAR  EQU     24H
+      = 001B            ESC     EQU     1BH
+      = 0003            CTRLC   EQU     03H
+
+                        ; Screen print calls
+      = 0009            WRITESTR        EQU     9H
+      = 0002            PRTCHR  EQU     02H
+      = 0005            BDOS    EQU     05H
+
+                        ;       CP/M User program space starts at Page 1.
+0100                            ORG     100h
+
+0100                    MAIN:
+0100  11 4A01                   LD      DE, GREET
+0103  CD 3601                   CALL PUTS
+0106  11 5D01                   LD      DE, PROMPT
+0109  CD 3601                   CALL PUTS
+
+010C                    READING:
+010C  CD 1201                   CALL INPUT
+010F  C3 0C01                   JP READING
+
+0112                    INPUT:
+0112  0E 0B               LD C,11 ; C_STAT
+0114  11 0000             LD DE,0
+0117  CD 0500             CALL BDOS
+011A  B7                  OR A
+011B  28 F5               JR Z,INPUT
+                        	
+                          ;;LD C,6
+                          ;;LD DE,-1
+                          ;;CALL BDOS
+                          ;OR A
+                          ;JP Z,INPUT
+
+011D  FE 03               CP 03H
+011F  CA 2D01             JP Z, EXIT
+
+0122  FE 0D               CP 0DH
+0124  CA 2D01             JP Z, EXIT
+
+0127  57                  LD D, A
+0128  5F                  LD E, A
+0129  CD 3C01             CALL PUTC
+012C  C9                  RET
+
+012D  11 6001           EXIT    LD      DE, EXITSTR
+0130  CD 3601                   CALL    PUTS
+                                ; CP/M Warm Boot
+0133  C3 0000                   JP 0h
+
+                        ; Print a string
+0136                    PUTS:
+                        ;;; Question, should we PUSH C and POP C here?
+0136  0E 09                     LD C, WRITESTR
+0138  CD 0500                   CALL BDOS
+013B  C9                        RET
+
+                        ; Print a character
+013C                    PUTC:
+013C  0E 02               LD C, PRTCHR
+013E  CD 0500             CALL BDOS
+0141  C9                  RET
+
+0142  1B5B481B 5B324A24 CL: DB ESC,"[H",ESC,"[2J$"
+
+014A  48454C4C 4F2C2049 GREET: DB "HELLO, I'M A TIL", CR, LF, 0H
+0152  274D2041 2054494C
+015A  0D0A00
+015D  3E2000            PROMPT: DB "> ", 0h
+0160  42796521 0D0A00   EXITSTR: DB "Bye!", CR, LF, 0h
+
+                        ;; Buffer at end of memory.
+0167   (00FF)           BUFFER: DS BUFFER_SIZE
+
+
+
+                                ; Need 0000 for asmx to generate correct Intel HEX.
+0266   (0000)                   END 0000
+
+BDOS               0005 E  BUFFER             0167    BUFFER_SIZE        00FF E
+CL                 0142    CR                 000D E  CTRLC              0003 E
+DOLLAR             0024 E  ESC                001B E  EXIT               012D
+EXITSTR            0160    GREET              014A    INPUT              0112
+LF                 000A E  MAIN               0100    PROMPT             015D
+PRTCHR             0002 E  PUTC               013C    PUTS               0136
+READING            010C    WRITESTR           0009 E

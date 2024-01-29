@@ -17,7 +17,7 @@ DONE    CALL    CRLF
 
 LOOP    JP     LOOP            ; forever
 
-MESG    DB 'Hello, world!',0
+MESG    DB 'Do you want to eat with us?',0
 
 CRLF    PUSH AF
         LD A,0Ah
