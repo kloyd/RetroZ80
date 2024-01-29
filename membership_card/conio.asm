@@ -11,7 +11,11 @@ ESC     EQU     1BH
 CTRLC   EQU     03H
 
 ; Screen print calls
-CHAR_IN EQU     01H
+CHAR_IN EQU     03H
+C_STAT  EQU     0BH
+C_RAWIO EQU     06H
+
+
 WRITESTR        EQU     9H
 PRTCHR  EQU     02H
 BDOS    EQU     05H 
@@ -30,12 +34,16 @@ READING:
         JP READING
 
 INPUT:
-        LD C, CHAR_IN
-        ;LD DE,0
-        CALL BDOS
-        ;OR A
-        ;JR Z,INPUT
-	
+        ; Loop until character available.
+        LD C, C_RAWIO
+        LD DE,FFFFh
+        CALL    BDOS
+        OR A 
+        JR Z, INPUT
+
+        ;LD C, CHAR_IN
+        ;CALL BDOS
+
         CP 03H
         JP Z, EXIT
 
