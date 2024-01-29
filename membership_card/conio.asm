@@ -11,6 +11,7 @@ ESC     EQU     1BH
 CTRLC   EQU     03H
 
 ; Screen print calls
+CHAR_IN EQU     01H
 WRITESTR        EQU     9H
 PRTCHR  EQU     02H
 BDOS    EQU     05H 
@@ -29,28 +30,22 @@ READING:
         JP READING
 
 INPUT:
-  LD C,11 ; C_STAT
-  LD DE,0
-  CALL BDOS
-  OR A
-  JR Z,INPUT
+        LD C, CHAR_IN
+        ;LD DE,0
+        CALL BDOS
+        ;OR A
+        ;JR Z,INPUT
 	
-  ;;LD C,6
-  ;;LD DE,-1
-  ;;CALL BDOS
-  ;OR A
-  ;JP Z,INPUT
+        CP 03H
+        JP Z, EXIT
 
-  CP 03H
-  JP Z, EXIT
+        CP 0DH
+        JP Z, EXIT
 
-  CP 0DH
-  JP Z, EXIT
-
-  LD D, A
-  LD E, A
-  CALL PUTC
-  RET
+        LD D, A
+        LD E, A
+        CALL PUTC
+        RET
 
 EXIT    LD      DE, EXITSTR
         CALL    PUTS
@@ -70,11 +65,10 @@ PUTC:
   CALL BDOS
   RET
 
-CL: DB ESC,"[H",ESC,"[2J$"
 
-GREET: DB "HELLO, I'M A TIL", CR, LF, 0H
-PROMPT: DB "> ", 0h
-EXITSTR: DB "Bye!", CR, LF, 0h
+GREET: DB "HELLO, I'M A TIL", CR, LF, DOLLAR
+PROMPT: DB "> ", DOLLAR
+EXITSTR: DB CR, LF, "K, Thx, Bye!", CR, LF, DOLLAR
 
 ;; Buffer at end of memory.
 BUFFER: DS BUFFER_SIZE
