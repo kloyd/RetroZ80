@@ -5,13 +5,10 @@
 ;   Z80 CP/M 64K RAM 
 ; ***
 
-
-
-; TIL
-
-; START/RESTART
+;---------- Put in CP/M Transient Memory space.
 	ORG	100h
 
+;---------- START/RESTART
 START	LD	DE,RSTMSG
 	LD	A,(BASE)
 	AND	A
@@ -30,7 +27,43 @@ ABORT	LD	SP,STACK
 	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
 	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
+; Entry point of OUTER interpreter.
+OUTER	DW	TYPE 
+	DW	INLINE
+	DW	ASPACE
+	DW	TOKEN
+	DW 	QSEARCH	; Leaves something on the stack if found or not found?
+	DW	@IF
 
+; --------- Inner Interpreter
+SEMI	DW	$ + 2
+	LD	C,(IX+0)
+	INC	IX
+	LD	B,(IX+0)
+	INC	IX
+NEXT	LD	A,(BC)	; BC = Instruction Register
+	LD	L,A	; @I -> WA (HL = word address)
+	INC	BC
+	LD	A,(BC)
+	LD	H,A
+	INC	BC	; I = I + 2
+RUN	LD	E,(HL)	; @WA -> CA (Code Address)
+	INC	HL	; WA = WA + 2
+	LD	D,(HL)
+	INC	HL
+	EX	DE,HL	; CA -> PC 
+	JP	(HL)
+
+COLON	DEC	IX
+	LD	(IX+0),B
+	DEC	IX
+	LD	(IX+0),C
+	LD	C,E
+	LD	B,D
+	JP	(IY)
+;----------- End of Inner -----
+
+; TYPE - String with length byte (0a1234567890) printed to console.
 TYPE	DW	$ + 2
 TYPEIT	POP	DE	; get address of string
 	PUSH	HL 	; save WA
@@ -47,25 +80,12 @@ ONECHAR	LD	A,(HL)
 	JP	NEXT
 
 
-	
-
-; Entry point of OUTER interpreter.
-OUTER	DW	$ + 2
-	DW	TYPE + 2
-	DW	INLINE + 2
-	DW	ASPACE + 2
-	DW	TOKEN + 2
-	DW 	QSEARCH + 2	; Leaves something on the stack if found or not found?
-	DW	@IF
-
-
-
 
 
 ; INLINE
 INLINE	DW	$ + 2	;header address
-ISTART	PUSH	BC
-	CALL	_CRLF	; Issue CR / LF on terminal for new input
+	PUSH	BC	; Save IR
+ISTART	CALL	_CRLF	; Issue CR / LF on terminal for new input
 	LD	HL, LBADD	; Buffer
 	LD	(LBP), HL
 	LD	B, LENGTH
@@ -86,6 +106,27 @@ TSTBS	CP	BKSP		; backspace CTRL-H
 ISSUE	CALL	_ECHO
 	JR	INKEY
 TSTCR	CP	CR
+	JR	Z,LAST1
+	BIT	7,L
+	JR	NZ,IEND
+SAVEIT	LD	(HL),A 
+	CP	61H	; Less than LC A ?
+	JR	C,NOTLC
+	CP	7BH	; MORE THAN LC Z?
+	JR	NC,NOTLC
+	RES	5,(HL)
+NOTLC	INC	L 
+	JR	ISSUE
+IEND	DEC	L 
+	LD	C,A 
+	LD	A,BKSP 
+	CALL	_ECHO 
+	LD	A,C 
+	JR 	SAVEIT 
+LAST1	LD	A, SPACE 
+	CALL	_ECHO
+	POP	BC 
+	JP	(IY)	; Return to NEXT inner interpreter.
 
 
 ASPACE
@@ -140,33 +181,7 @@ OK	DB	'OK',0
 ; PATCH internal routine.
 _PATCH	DB	0
 
-; Inner Interpreter
 
-SEMI	DW	$ + 2
-	LD	C,(IX+0)
-	INC	IX
-	LD	B,(IX+0)
-	INC	IX
-NEXT	LD	A,(BC)	; BC = Instruction Register
-	LD	L,A	; @I -> WA (HL = word address)
-	INC	BC
-	LD	A,(BC)
-	LD	H,A
-	INC	BC	; I = I + 2
-RUN	LD	E,(HL)	; @WA -> CA (Code Address)
-	INC	HL	; WA = WA + 2
-	LD	D,(HL)
-	INC	HL
-	EX	DE,HL	; CA -> PC 
-	JP	(HL)
-
-COLON	DEC	IX
-	LD	(IX+0),B
-	DEC	IX
-	LD	(IX+0),C
-	LD	C,E
-	LD	B,D
-	JP	(IY)
 
 ; EXECUTE primitive needs a dictionary entry for defining words.
 ; This is a model for all other Primitive words that will be added to the dictionary
@@ -175,7 +190,7 @@ COLON	DEC	IX
 	DW	0		; Link address 0000 == End of Linked List.
 EXECUTE DW	$ + 2		; Address of EXECUTE.
 	POP	HL		; primitive code.
-	JR	RUN
+	JP	RUN
 
 ;----------------------------------------
 ; CP/M Machine Specific routines
@@ -221,16 +236,18 @@ _ECHO
 
 ; Get a key 
 _KEY
-; Preserve BC and DE.
-        PUSH BC
-        PUSH DE
-WAITKEY LD C, C_RAWIO
-        LD DE,FFFFh
+; Preserve BC, DE, and HL.
+        PUSH	BC
+        PUSH	DE
+	PUSH	HL
+WAITKEY LD	C, C_RAWIO
+        LD	DE,FFFFh
         CALL    BDOS
-        OR A 
-        JR Z, WAITKEY
-        POP DE
-        POP BC
+        OR 	A 
+        JR 	Z,WAITKEY
+	POP	HL
+        POP	DE
+        POP	BC
 ; Character returned in A register.
         RET      
 
