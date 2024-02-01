@@ -1,10 +1,16 @@
-; TIL
+; *****  TIL
 ; Outer Interpreter
+; Author Kelly Loyd
+; Target System
+;   Z80 CP/M 64K RAM 
+; ***
+
+
 
 ; TIL
 
 ; START/RESTART
-	ORG	0x8000
+	ORG	100h
 
 START	LD	DE,RSTMSG
 	LD	A,(BASE)
@@ -19,14 +25,42 @@ ABORT	LD	SP,STACK
 	LD	(MODE),HL
 	LD	IY,NEXT
 	LD	IX,RETURN
-	LD	HL,8080
+	LD	HL,8080h
 	LD	(LBEND),HL
 	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
 	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
 
-; TYPE
-OUTER
+TYPE	DW	$ + 2
+TYPEIT	POP	DE	; get address of string
+	PUSH	HL 	; save WA
+	PUSH	BC	; Save IR.
+	EX	DE,HL
+	LD	B,(HL)
+	INC	HL
+ONECHAR	LD	A,(HL)
+	CALL	_ECHO
+	INC	HL
+	DJNZ	ONECHAR
+	POP	BC	; Restore IR
+	POP	HL	; Restore WA
+	JP	NEXT
+
+
+	
+
+; Entry point of OUTER interpreter.
+OUTER	DW	$ + 2
+	DW	TYPE + 2
+	DW	INLINE + 2
+	DW	ASPACE + 2
+	DW	TOKEN + 2
+	DW 	QSEARCH + 2	; Leaves something on the stack if found or not found?
+	DW	@IF
+
+
+
+
 
 ; INLINE
 INLINE	DW	$ + 2	;header address
@@ -35,7 +69,7 @@ ISTART	PUSH	BC
 	LD	HL, LBADD	; Buffer
 	LD	(LBP), HL
 	LD	B, LENGTH
-CLEAR	LD	(HL), ASPACE
+CLEAR	LD	(HL), SPACE
 	INC	HL
 	DJNZ	CLEAR
 ZERO	LD	L,0
@@ -48,33 +82,40 @@ TSTBS	CP	BKSP		; backspace CTRL-H
 	JR	NZ, TSTCR
 	DEC	HL
 	JP	M,ZERO
-	LD	(HL), ASPACE
+	LD	(HL), SPACE
 ISSUE	CALL	_ECHO
 	JR	INKEY
 TSTCR	CP	CR
 
 
-; ASPACE
+ASPACE
 
-; TOKEN
+TOKEN
 
-; ?SEARCH
+QSEARCH
 
 ; ABSENT?
 ; - NO -> ?EXECUTE -> ASPACE
 ; - YES -> NUMBER
 
-; ?EXECUTE
+QEXECUTE	DW $ + 2
+	NOP
+	JP (IY)
 
-; ?NUMBER
+QNUMBER		DW $ + 2
+	NOP
+	JP (IY)
+
+@IF	DW $ + 2
+	NOP
+	JP (IY)
 
 ; INVALID NUMBER?
 ; NO -> ASPACE
 ; YES -> QUESTION
 
 ; QUESTION
-QUESTION
-	DW	$+2
+QUESTION	DW	$ + 2
 	LD 	HL,(DP)
 	INC 	HL
 	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
@@ -84,7 +125,7 @@ QUESTION
 	JP	(IY)
 ERROR	CALL	_CRLF
 	LD	IY,RETURN
-	JP	_TYPE
+	JP	TYPE
 RETURN	LD	DE, QMSG
 	JP	_PATCH
 
@@ -92,8 +133,7 @@ RETURN	LD	DE, QMSG
 
 
 ; Internals
-_TYPE	DB	0
-_CRLF	DB	0
+
 QMSG	DB	'?', 0
 OK	DB	'OK',0
 
@@ -107,17 +147,17 @@ SEMI	DW	$ + 2
 	INC	IX
 	LD	B,(IX+0)
 	INC	IX
-NEXT	LD	A,(BC)
-	LD	L,A
+NEXT	LD	A,(BC)	; BC = Instruction Register
+	LD	L,A	; @I -> WA (HL = word address)
 	INC	BC
 	LD	A,(BC)
 	LD	H,A
-	INC	BC
-RUN	LD	E,(HL)
-	INC	HL
+	INC	BC	; I = I + 2
+RUN	LD	E,(HL)	; @WA -> CA (Code Address)
+	INC	HL	; WA = WA + 2
 	LD	D,(HL)
 	INC	HL
-	EX	DE,HL
+	EX	DE,HL	; CA -> PC 
 	JP	(HL)
 
 COLON	DEC	IX
@@ -137,25 +177,78 @@ EXECUTE DW	$ + 2		; Address of EXECUTE.
 	POP	HL		; primitive code.
 	JR	RUN
 
-; ***
-; Machine Specific routines
-; KEY
-;; Very simplistic using Z80 simulator terminal I/o
-_KEY	IN	A,(FFH)
-	RET
+;----------------------------------------
+; CP/M Machine Specific routines
+; 
+; *   Internal Routines interfacing with Operating System.
+; * _ECHO - Echo a character to terminal
+; * _KEY - Read a key from terminal
+; * _CRLF - Output CR/LF to terminal
+;----------------------------------------
+;; Handy Constants
+CR	EQU     0DH
+LF	EQU     0AH
+DOLLAR  EQU     24H
+ESC     EQU     1BH
+CTRLC   EQU     03H
 
-; ECHO
-_ECHO	OUT	(FFh), A
-	RET
+; Screen print calls
+CHAR_IN EQU     03H
+C_STAT  EQU     0BH
+C_RAWIO EQU     06H
 
+; til has own write str using _ECHO
+;WRITESTR        EQU     9H
+PRTCHR  EQU     02H
+BDOS    EQU     05H 
 
+; Output one character.
+; A = Input Char.
+; preserve BC register.
+; preserve HL register.
+_ECHO
+	PUSH HL
+        PUSH BC 
+	PUSH DE
+	LD D,A 
+	LD E,A
+        LD C, PRTCHR
+        CALL BDOS
+        POP DE 
+	POP BC
+	POP HL
+        RET
+
+; Get a key 
+_KEY
+; Preserve BC and DE.
+        PUSH BC
+        PUSH DE
+WAITKEY LD C, C_RAWIO
+        LD DE,FFFFh
+        CALL    BDOS
+        OR A 
+        JR Z, WAITKEY
+        POP DE
+        POP BC
+; Character returned in A register.
+        RET      
+
+; Output CR LF to console.
+_CRLF
+	PUSH AF
+	LD A, CR
+	CALL _ECHO
+	LD A, LF
+	CALL _ECHO
+	POP AF
+        RET
 
 ; Constants
 ;
 LINEDEL	EQU	18H	; ctrl-x line delete
-ASPACE	EQU	20h	; space
+SPACE	EQU	20h	; space
 BKSP	EQU	08h	; ctrl-H backspace
-CR	EQU	0Dh	; carriage return
 
 ; Variables
 BASE	DB	0	; BASE for restart/warm start
@@ -167,16 +260,19 @@ LBADD	DW	0
 
 ; Dictonary pointer
 DP	DW	0
+STACK	EQU	8000h
 
 ; Strings
-RSTMSG	DB	' TIL RESTART', 0
-SRTMSG	DB	' WELCOME TO RETRO TIL',0
+RSTMSG	DB	12, ' TIL RESTART'
+SRTMSG	DB	21, ' WELCOME TO RETRO TIL'
 
-; Stack grows down... set this at F000
-	ORG	0xF000
+; Stack grows down... set this at 8000 for cpm
+;	ORG	4000h
 ;STK	DS	255
-STACK	DB	0
+;STACK	DB	0
 
 
 
 
+
+	END	0000
