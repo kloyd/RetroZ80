@@ -1,5 +1,6 @@
         ORG     100h
 
+        LD      DE, 
 TYPE	DW	$ + 2
 TYPEIT	POP	DE	; get address of string
 	PUSH	HL 	; save HL
