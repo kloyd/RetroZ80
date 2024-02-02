@@ -26,37 +26,33 @@ BDOS    EQU     05H
 MAIN:
         LD      DE, GREET
         CALL PUTS
+        CALL _CRLF
         LD      DE, PROMPT
         CALL PUTS
 
-READING:
+READLINE:
         CALL INPUT
-        JP READING
+        JR READLINE
 
+;; Test scaffold for _KEY and _ECHO
 INPUT:
-        ; Loop until character available.
-        LD C, C_RAWIO
-        LD DE,FFFFh
-        CALL    BDOS
-        OR A 
-        JR Z, INPUT
+        CALL _KEY
 
-        ;LD C, CHAR_IN
-        ;CALL BDOS
-
-        CP 03H
+        CP CTRLC
         JP Z, EXIT
 
-        CP 0DH
+        CP CR
         JP Z, EXIT
 
         LD D, A
         LD E, A
-        CALL PUTC
+        CALL _ECHO
         RET
 
-EXIT    LD      DE, EXITSTR
+EXIT    CALL _CRLF
+        LD      DE, EXITSTR
         CALL    PUTS
+        CALL _CRLF
         ; CP/M Warm Boot
         JP 0h
 
@@ -67,16 +63,51 @@ PUTS:
         CALL BDOS
         RET
 
+;****
+;*   Internal Routines interfacing with Operating System.
+;* _ECHO - Echo a character to terminal
+;* _KEY - Read a key from terminal
+;* _CRLF - Output CR/LF to terminal
+;****
 ; Print a character
-PUTC:
-  LD C, PRTCHR
-  CALL BDOS
-  RET
+_ECHO:
+        PUSH BC 
+        LD C, PRTCHR
+        CALL BDOS
+        POP BC
+        RET
+
+; Get a key (Used by TIL)
+_KEY:
+; Preserve BC and DE.
+        PUSH BC
+        PUSH DE
+WAITKEY LD C, C_RAWIO
+        LD DE,FFFFh
+        CALL    BDOS
+        OR A 
+        JR Z, WAITKEY
+        POP DE
+        POP BC
+        RET      
+
+_CRLF:
+; Output CR LF to console.
+        PUSH DE
+        PUSH BC
+        LD DE, CRLF
+        LD C, WRITESTR
+        CALL BDOS
+        POP BC
+        POP DE
+        RET
 
 
-GREET: DB "HELLO, I'M A TIL", CR, LF, DOLLAR
+CRLF: DB CR, LF, DOLLAR
+
+GREET: DB "HELLO, I'M A TIL", DOLLAR
 PROMPT: DB "> ", DOLLAR
-EXITSTR: DB CR, LF, "K, Thx, Bye!", CR, LF, DOLLAR
+EXITSTR: DB CR, LF, "BYE!", DOLLAR
 
 ;; Buffer at end of memory.
 BUFFER: DS BUFFER_SIZE

@@ -4,7 +4,7 @@
       = 1382            SET_IO  EQU     1382h
 8000                            ORG     8000h   ; RAM Start
 8000  CD 8213                   CALL    SET_IO  ; Set I/O system
-8003  CD 2880                   CALL    CRLF    ; Issue CR and LF.
+8003  CD 3680                   CALL    CRLF    ; Issue CR and LF.
 
 8006  21 1A80                   LD      HL, MESG
 8009  7E                OUTS    LD      A,(HL)
@@ -13,23 +13,25 @@
 800E  CD E813                   CALL    PUT_CHAR
 8011  23                        INC     HL
 8012  18 F5                     JR      OUTS
-8014  CD 2880           DONE    CALL    CRLF
+8014  CD 3680           DONE    CALL    CRLF
 
 8017  C3 1780           LOOP    JP     LOOP            ; forever
 
-801A  48656C6C 6F2C2077 MESG    DB 'Hello, world!',0
-8022  6F726C64 2100
+801A  446F2079 6F752077 MESG    DB 'Do you want to eat with us?',0
+8022  616E7420 746F2065
+802A  61742077 69746820
+8032  75733F00
 
-8028  F5                CRLF    PUSH AF
-8029  3E 0A                     LD A,0Ah
-802B  CD E813                   CALL PUT_CHAR
-802E  3E 0D                     LD A,0Dh
-8030  CD E813                   CALL PUT_CHAR
-8033  F1                        POP AF
-8034  C9                        RET
+8036  F5                CRLF    PUSH AF
+8037  3E 0A                     LD A,0Ah
+8039  CD E813                   CALL PUT_CHAR
+803C  3E 0D                     LD A,0Dh
+803E  CD E813                   CALL PUT_CHAR
+8041  F1                        POP AF
+8042  C9                        RET
 
-8035   (0000)                   END     0000
+8043   (0000)                   END     0000
 
-CRLF               8028    DONE               8014    LOOP               8017
+CRLF               8036    DONE               8014    LOOP               8017
 MESG               801A    OUTS               8009    PUT_CHAR           13E8 E
 SET_IO             1382 E

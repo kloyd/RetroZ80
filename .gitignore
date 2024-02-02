@@ -1,0 +1,7 @@
+*.hex
+*.obj
+*.prn
+autosave
+.DS_Store
+
+

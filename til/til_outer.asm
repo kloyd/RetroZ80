@@ -129,9 +129,16 @@ LAST1	LD	A, SPACE
 	JP	(IY)	; Return to NEXT inner interpreter.
 
 
-ASPACE
+ASPACE	DW	$ + 2
+	LD	A, 20h
+	PUSH	AF
+	JP	(IY)	
 
-TOKEN
+
+TOKEN	DW	$ + 2
+	NOP 
+	NOP 
+	RST 7h
 
 QSEARCH
 
@@ -237,8 +244,8 @@ _ECHO
 ; Get a key 
 _KEY
 ; Preserve BC, DE, and HL.
-        PUSH	BC
-        PUSH	DE
+	PUSH	BC
+	PUSH	DE
 	PUSH	HL
 WAITKEY LD	C, C_RAWIO
         LD	DE,FFFFh
@@ -272,8 +279,9 @@ BASE	DB	0	; BASE for restart/warm start
 MODE	DB	0	; MODE
 LBP	DW	0 	; line buffer pointer
 LENGTH	EQU	128	; buffer length
-LBEND	DS	128	; text input buffer
-LBADD	DW	0
+	ORG	400h	; put on page boundary
+LBADD	DS	128	; text input buffer
+LBEND	DW	0
 
 ; Dictonary pointer
 DP	DW	0

@@ -24,39 +24,35 @@
 0100                            ORG     100h
 
 0100                    MAIN:
-0100  11 4201                   LD      DE, GREET
+0100  11 6401                   LD      DE, GREET
 0103  CD 3601                   CALL PUTS
-0106  11 5501                   LD      DE, PROMPT
-0109  CD 3601                   CALL PUTS
+0106  CD 5401                   CALL _CRLF
+0109  11 7501                   LD      DE, PROMPT
+010C  CD 3601                   CALL PUTS
 
-010C                    READING:
-010C  CD 1201                   CALL INPUT
-010F  C3 0C01                   JP READING
+010F                    READLINE:
+010F  CD 1401                   CALL INPUT
+0112  18 FB                     JR READLINE
 
-0112                    INPUT:
-                                ; Loop until character available.
-0112  0E 06                     LD C, C_RAWIO
-0114  11 FFFF                   LD DE,FFFFh
-0117  CD 0500                   CALL    BDOS
-011A  B7                        OR A
-011B  28 F5                     JR Z, INPUT
+                        ;; Test scaffold for _KEY and _ECHO
+0114                    INPUT:
+0114  CD 4401                   CALL _KEY
 
-                                ;LD C, CHAR_IN
-                                ;CALL BDOS
+0117  FE 03                     CP 03H
+0119  CA 2701                   JP Z, EXIT
 
-011D  FE 03                     CP 03H
-011F  CA 2D01                   JP Z, EXIT
+011C  FE 0D                     CP 0DH
+011E  CA 2701                   JP Z, EXIT
 
-0122  FE 0D                     CP 0DH
-0124  CA 2D01                   JP Z, EXIT
+0121  57                        LD D, A
+0122  5F                        LD E, A
+0123  CD 3C01                   CALL _ECHO
+0126  C9                        RET
 
-0127  57                        LD D, A
-0128  5F                        LD E, A
-0129  CD 3C01                   CALL PUTC
-012C  C9                        RET
-
-012D  11 5801           EXIT    LD      DE, EXITSTR
-0130  CD 3601                   CALL    PUTS
+0127  CD 5401           EXIT    CALL _CRLF
+012A  11 7801                   LD      DE, EXITSTR
+012D  CD 3601                   CALL    PUTS
+0130  CD 5401                   CALL _CRLF
                                 ; CP/M Warm Boot
 0133  C3 0000                   JP 0h
 
@@ -67,34 +63,68 @@
 0138  CD 0500                   CALL BDOS
 013B  C9                        RET
 
+                        ;****
+                        ;*   Internal Routines interfacing with Operating System.
+                        ;* _ECHO - Echo a character to terminal
+                        ;* _KEY - Read a key from terminal
+                        ;* _CRLF - Output CR/LF to terminal
+                        ;****
                         ; Print a character
-013C                    PUTC:
-013C  0E 02               LD C, PRTCHR
-013E  CD 0500             CALL BDOS
-0141  C9                  RET
+013C                    _ECHO:
+013C  C5                        PUSH BC
+013D  0E 02                     LD C, PRTCHR
+013F  CD 0500                   CALL BDOS
+0142  C1                        POP BC
+0143  C9                        RET
+
+                        ; Get a key (Used by TIL)
+0144                    _KEY:
+                        ; Preserve BC and DE.
+0144  C5                        PUSH BC
+0145  D5                        PUSH DE
+0146  0E 06             WAITKEY LD C, C_RAWIO
+0148  11 FFFF                   LD DE,FFFFh
+014B  CD 0500                   CALL    BDOS
+014E  B7                        OR A
+014F  28 F5                     JR Z, WAITKEY
+0151  D1                        POP DE
+0152  C1                        POP BC
+0153  C9                        RET
+
+0154                    _CRLF:
+                        ; Output CR LF to console.
+0154  D5                        PUSH DE
+0155  C5                        PUSH BC
+0156  11 6101                   LD DE, CRLF
+0159  0E 09                     LD C, WRITESTR
+015B  CD 0500                   CALL BDOS
+015E  C1                        POP BC
+015F  D1                        POP DE
+0160  C9                        RET
 
 
-0142  48454C4C 4F2C2049 GREET: DB "HELLO, I'M A TIL", CR, LF, DOLLAR
-014A  274D2041 2054494C
-0152  0D0A24
-0155  3E2024            PROMPT: DB "> ", DOLLAR
-0158  0D0A4B2C 20546878 EXITSTR: DB CR, LF, "K, Thx, Bye!", CR, LF, DOLLAR
-0160  2C204279 65210D0A
-0168  24
+0161  0D0A24            CRLF: DB CR, LF, DOLLAR
+
+0164  48454C4C 4F2C2049 GREET: DB "HELLO, I'M A TIL", DOLLAR
+016C  274D2041 2054494C
+0174  24
+0175  3E2024            PROMPT: DB "> ", DOLLAR
+0178  0D0A4259 452124   EXITSTR: DB CR, LF, "BYE!", DOLLAR
 
                         ;; Buffer at end of memory.
-0169   (00FF)           BUFFER: DS BUFFER_SIZE
+017F   (00FF)           BUFFER: DS BUFFER_SIZE
 
 
 
                                 ; Need 0000 for asmx to generate correct Intel HEX.
-0268   (0000)                   END 0000
+027E   (0000)                   END 0000
 
-BDOS               0005 E  BUFFER             0169    BUFFER_SIZE        00FF E
-CHAR_IN            0003 E  CR                 000D E  CTRLC              0003 E
-C_RAWIO            0006 E  C_STAT             000B E  DOLLAR             0024 E
-ESC                001B E  EXIT               012D    EXITSTR            0158
-GREET              0142    INPUT              0112    LF                 000A E
-MAIN               0100    PROMPT             0155    PRTCHR             0002 E
-PUTC               013C    PUTS               0136    READING            010C
-WRITESTR           0009 E
+BDOS               0005 E  BUFFER             017F    BUFFER_SIZE        00FF E
+CHAR_IN            0003 E  CR                 000D E  CRLF               0161
+CTRLC              0003 E  C_RAWIO            0006 E  C_STAT             000B E
+DOLLAR             0024 E  ESC                001B E  EXIT               0127
+EXITSTR            0178    GREET              0164    INPUT              0114
+LF                 000A E  MAIN               0100    PROMPT             0175
+PRTCHR             0002 E  PUTS               0136    READLINE           010F
+WAITKEY            0146    WRITESTR           0009 E  _CRLF              0154
+_ECHO              013C    _KEY               0144
