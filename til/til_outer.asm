@@ -5,6 +5,9 @@
 ;   Z80 CP/M 64K RAM 
 ; ***
 
+; Non Standard Z80 MC
+STD_CPM	EQU 0
+
 ;---------- Put in CP/M Transient Memory space.
 	ORG	100h
 
@@ -32,6 +35,7 @@ OUTER	DW	TYPE
 	DW	INLINE
 	DW	ASPACE
 	DW	TOKEN
+	DW	TILHALT 
 	DW 	QSEARCH	; Leaves something on the stack if found or not found?
 	DW	@IF
 
@@ -135,10 +139,43 @@ ASPACE	DW	$ + 2
 	JP	(IY)	
 
 
+	DB 5,'TOK'	; TOKEN ID 
+	DW	EXECUTE
 TOKEN	DW	$ + 2
-	NOP 
-	NOP 
-	RST 7h
+	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
+	LD	HL,(LBP) ; pointer to token 
+	LD	DE,(DP) ; pointer to Dictionary 
+	POP 	BC	; space left by ASPACE 
+	LD	A,20H 	; space code
+	CP	C 	; space?
+	JR 	NZ, TOK
+IGNLB	CP	(HL)
+	JR	NZ,TOK
+	INC	L 
+	JR 	IGNLB
+TOK	PUSH	HL
+COUNT	INC	B 
+	INC 	L
+	LD 	A,(HL)
+	CP 	C
+	JR 	Z,ENDTOK 
+	RLA
+	JR 	NC,COUNT 
+	DEC	L 
+ENDTOK	INC	L 
+	LD 	(LBP), HL 
+	LD	A,B 
+	LD	(DE), A 
+	INC	DE 
+	POP	HL 
+	LD 	C,B 
+	LD 	B,0 
+	LDIR  		; Move token to dictionary 
+	EXX 
+	JP 	(IY)
+
+
+
 
 QSEARCH
 
@@ -157,6 +194,16 @@ QNUMBER		DW $ + 2
 @IF	DW $ + 2
 	NOP
 	JP (IY)
+
+; For Z80 MC - DDT was changed to use RST 6 since the hardware uses RST 7.
+; For Standard CP/M
+TILHALT	DW	$ + 2
+	IF STD_CPM = 1
+	RST	7
+	ELSE
+	RST 	6
+	ENDIF
+
 
 ; INVALID NUMBER?
 ; NO -> ASPACE
