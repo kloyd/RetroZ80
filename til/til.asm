@@ -175,14 +175,57 @@ ENDTOK	INC	L
 	JP 	(IY)
 
 
-
-
+; SEARCH Primitive
+        DB      6,'SEA'
+        DW      TOKEN
+SEARCH  DW      $ + 2
+        EXX     ; save registers
+        POP     HL      ; start of header
+TESTIT  PUSH    HL      ; save start of header
+        LD      DE,(DP)         ;dictionary pointer.
+        LD      C, 0    ; used with B as false flag
+        LD      A,(DE)  ;get dictionary token length
+        CP      (HL)    ; same as keyword length?
+        JP      NZ, NXTHDR      ; go to next entry in linked list.
+        CP      4       ; Is length over 3?
+        JR      C, BEL04        ; skip set 3
+        LD      A, 3    ; length = 3
+BEL04   LD      B, A     
+NEXTCH  INC     HL      ; Bump header
+        INC     DE      ; bump dictionary pointer.
+        LD      A, (DE) ; next character
+        CP      (HL)
+        JR      NZ, NXTHDR      ; Go to next header entry.
+        DJNZ    NEXTCH          ; next character
+        POP     HL      ; start of found header
+        LD      DE,6    ; start plus 6 
+        ADD     HL,DE   ; == Word Address
+        PUSH    HL      ; push WA; BC = 0 for Flag.
+        JR      FLAG 
+NXTHDR  POP     HL      ; start of current header
+        LD      DE,4    ; plus 4 == Link Address (pointer to next entry)
+        ADD     HL, DE  ; To Next keyword
+        LD      E, (HL) ; get link address
+        INC     HL
+        LD      D, (HL)
+        EX      DE, HL
+        LD      A, H 
+        OR      L 
+        JR      NZ, TESTIT ; not 0, test next header.
+        LD      C, 1    ; false
+FLAG    PUSH    BC      ; push flag
+        EXX             ;Restore registers
+        JP      (IY)    ; back to NEXT
+        
+;
+; ?SEARCH - Secondary to search dictionary.
 QSEARCH
 
 ; ABSENT?
 ; - NO -> ?EXECUTE -> ASPACE
 ; - YES -> NUMBER
 
+; ?EXECUTE - Execute Secondary.
 QEXECUTE	DW $ + 2
 	NOP
 	JP (IY)
