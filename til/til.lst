@@ -71,7 +71,7 @@
                         ;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
 0163                    DICT_BEG
 0163  05544F4B                  DB 5,'TOK'	; TOKEN ID
-0167  E001              	DW	EXECUTE
+0167  A001              	DW	SEARCH
 0169  6B01              TOKEN	DW	$ + 2
 016B  D9                	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
 016C  2A F102           	LD	HL,(LBP) ; pointer to token
@@ -108,7 +108,7 @@
 
                         ; SEARCH Primitive
 019A  06534541                  DB      6,'SEA'
-019E  6901                      DW      TOKEN
+019E  E001                      DW      EXECUTE
 01A0  A201              SEARCH  DW      $ + 2
 01A2  D9                        EXX     ; save registers
 01A3  E1                        POP     HL      ; start of header
