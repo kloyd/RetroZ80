@@ -67,79 +67,10 @@ COLON	DEC	IX
 	JP	(IY)
 ;----------- End of Inner -----
 
-; TYPE - String with length byte (0a1234567890) printed to console.
-TYPE	DW	$ + 2
-TYPEIT	POP	DE	; get address of string
-	PUSH	HL 	; save WA
-	PUSH	BC	; Save IR.
-	EX	DE,HL
-	LD	B,(HL)
-	INC	HL
-ONECHAR	LD	A,(HL)
-	CALL	_ECHO
-	INC	HL
-	DJNZ	ONECHAR
-	POP	BC	; Restore IR
-	POP	HL	; Restore WA
-	JP	NEXT
-
-
-
-
-; INLINE
-INLINE	DW	$ + 2	;header address
-	PUSH	BC	; Save IR
-ISTART	CALL	_CRLF	; Issue CR / LF on terminal for new input
-	LD	HL, LBADD	; Buffer
-	LD	(LBP), HL
-	LD	B, LENGTH
-CLEAR	LD	(HL), SPACE
-	INC	HL
-	DJNZ	CLEAR
-ZERO	LD	L,0
-INKEY	CALL	_KEY
-	CP	LINEDEL		; CTRL-X is Line Delete
-	JR	NZ,TSTBS
-	CALL	_ECHO
-	JR ISTART
-TSTBS	CP	BKSP		; backspace CTRL-H
-	JR	NZ, TSTCR
-	DEC	HL
-	JP	M,ZERO
-	LD	(HL), SPACE
-ISSUE	CALL	_ECHO
-	JR	INKEY
-TSTCR	CP	CR
-	JR	Z,LAST1
-	BIT	7,L
-	JR	NZ,IEND
-SAVEIT	LD	(HL),A 
-	CP	61H	; Less than LC A ?
-	JR	C,NOTLC
-	CP	7BH	; MORE THAN LC Z?
-	JR	NC,NOTLC
-	RES	5,(HL)
-NOTLC	INC	L 
-	JR	ISSUE
-IEND	DEC	L 
-	LD	C,A 
-	LD	A,BKSP 
-	CALL	_ECHO 
-	LD	A,C 
-	JR 	SAVEIT 
-LAST1	LD	A, SPACE 
-	CALL	_ECHO
-	POP	BC 
-	JP	(IY)	; Return to NEXT inner interpreter.
-
-; Push 20h to stack, will pop into BC in TOKEN, and BC will be 0020h
-ASPACE	DW	$ + 2
-	LD	DE, 20h
-	PUSH	DE
-	JP	(IY)	
-
-
-	DB 5,'TOK'	; TOKEN ID 
+;----------   IMPORTANT - Start of Vocabulary, Dictionary Entries
+;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
+DICT_BEG
+        DB 5,'TOK'	; TOKEN ID 
 	DW	EXECUTE
 TOKEN	DW	$ + 2
 	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
@@ -216,10 +147,102 @@ NXTHDR  POP     HL      ; start of current header
 FLAG    PUSH    BC      ; push flag
         EXX             ;Restore registers
         JP      (IY)    ; back to NEXT
-        
+
+; EXECUTE primitive needs a dictionary entry for defining words.
+; This is a model for all other Primitive words that will be added to the dictionary
+;
+	DB	7,'EXE'	; Header for dictionary search
+	DW	0		; Link address 0000 == End of Linked List.
+EXECUTE DW	$ + 2		; Address of EXECUTE.
+	POP	HL		; primitive code.
+	JP	RUN
+
+;----------   End of Dictonary Entries
+
 ;
 ; ?SEARCH - Secondary to search dictionary.
-QSEARCH
+QSEARCH DW      $ + 2
+        DW      COLON
+        DW      CONTEXT
+        DW      AT 
+        DW      AT 
+        DW      SEARCH
+        DW      DUP
+        DW      @IF
+        
+
+; TYPE - String with length byte (0a1234567890) printed to console.
+TYPE	DW	$ + 2
+TYPEIT	POP	DE	; get address of string
+	PUSH	HL 	; save WA
+	PUSH	BC	; Save IR.
+	EX	DE,HL
+	LD	B,(HL)
+	INC	HL
+ONECHAR	LD	A,(HL)
+	CALL	_ECHO
+	INC	HL
+	DJNZ	ONECHAR
+	POP	BC	; Restore IR
+	POP	HL	; Restore WA
+	JP	NEXT
+
+
+
+
+; INLINE
+INLINE	DW	$ + 2	;header address
+	PUSH	BC	; Save IR
+ISTART	CALL	_CRLF	; Issue CR / LF on terminal for new input
+	LD	HL, LBADD	; Buffer
+	LD	(LBP), HL
+	LD	B, LENGTH
+CLEAR	LD	(HL), SPACE
+	INC	HL
+	DJNZ	CLEAR
+ZERO	LD	L,0
+INKEY	CALL	_KEY
+	CP	LINEDEL		; CTRL-X is Line Delete
+	JR	NZ,TSTBS
+	CALL	_ECHO
+	JR ISTART
+TSTBS	CP	BKSP		; backspace CTRL-H
+	JR	NZ, TSTCR
+	DEC	HL
+	JP	M,ZERO
+	LD	(HL), SPACE
+ISSUE	CALL	_ECHO
+	JR	INKEY
+TSTCR	CP	CR
+	JR	Z,LAST1
+	BIT	7,L
+	JR	NZ,IEND
+SAVEIT	LD	(HL),A 
+	CP	61H	; Less than LC A ?
+	JR	C,NOTLC
+	CP	7BH	; MORE THAN LC Z?
+	JR	NC,NOTLC
+	RES	5,(HL)
+NOTLC	INC	L 
+	JR	ISSUE
+IEND	DEC	L 
+	LD	C,A 
+	LD	A,BKSP 
+	CALL	_ECHO 
+	LD	A,C 
+	JR 	SAVEIT 
+LAST1	LD	A, SPACE 
+	CALL	_ECHO
+	POP	BC 
+	JP	(IY)	; Return to NEXT inner interpreter.
+
+; Push 20h to stack, will pop into BC in TOKEN, and BC will be 0020h
+ASPACE	DW	$ + 2
+	LD	DE, 20h
+	PUSH	DE
+	JP	(IY)	
+
+
 
 ; ABSENT?
 ; - NO -> ?EXECUTE -> ASPACE
@@ -235,8 +258,36 @@ QNUMBER		DW $ + 2
 	JP (IY)
 
 @IF	DW $ + 2
-	NOP
+	POP HL
+        LD A,L 
+        OR H 
+        JP Z,_ELSE 
+        INC BC 
 	JP (IY)
+
+_ELSE   LD      A,(BC)  ; get jump byte
+        ADD     A, C       ; add to IR
+        LD      C, A    ; Reset IR
+        JR      NC, OUT ; Past Page?
+        INC     B       ;  Yes 
+OUT     JP      (IY)
+
+AT      DW      $ + 2
+        POP     HL 
+        LD      E, (HL) ; low byte at address
+        INC     HL 
+        LD      D, (HL) ; high byte
+        PUSH    DE
+        JP      (IY)
+
+CONTEXT DW      $ + 2
+
+
+DUP     DW      $ + 2
+        POP     HL
+        PUSH    HL
+        PUSH    HL
+        JP      (IY)
 
 ; For Z80 MC - DDT was changed to use RST 6 since the hardware uses RST 7.
 ; For Standard CP/M
@@ -280,14 +331,6 @@ _PATCH	DB	0
 
 
 
-; EXECUTE primitive needs a dictionary entry for defining words.
-; This is a model for all other Primitive words that will be added to the dictionary
-;
-	DB	7,'E','X','E'	; Header for dictionary search
-	DW	0		; Link address 0000 == End of Linked List.
-EXECUTE DW	$ + 2		; Address of EXECUTE.
-	POP	HL		; primitive code.
-	JP	RUN
 
 ;----------------------------------------
 ; CP/M Machine Specific routines
@@ -373,6 +416,11 @@ LENGTH	EQU	128	; buffer length
 LBADD	DS	128	; text input buffer
 LBEND	DW	0
 
+; CORE points to Core Vocab (first entry in dictionary)
+CORE    DW      DICT_BEG
+  
+;---- CONTEXT... points to Vocabulary?
+CTXTPTR DW      DP
 ; Dictonary pointer
 DP	DW	DICT
 STACK	EQU	8000h
