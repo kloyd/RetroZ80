@@ -71,7 +71,7 @@ COLON	DEC	IX
 ;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
 DICT_BEG
         DB 5,'TOK'	; TOKEN ID 
-	DW	SEARCH
+	DW	SEARCH - 6      ; should point to the Entry start.
 TOKEN	DW	$ + 2
 	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
 	LD	HL,(LBP) ; pointer to token 
@@ -108,7 +108,7 @@ ENDTOK	INC	L
 
 ; SEARCH Primitive
         DB      6,'SEA'
-        DW      EXECUTE
+        DW      EXECUTE - 6     ; Point to the Entry proper.
 SEARCH  DW      $ + 2
         EXX     ; save registers
         POP     HL      ; start of header
