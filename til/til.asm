@@ -71,7 +71,7 @@ COLON	DEC	IX
 ;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
 DICT_BEG
         DB 5,'TOK'	; TOKEN ID 
-	DW	EXECUTE
+	DW	SEARCH
 TOKEN	DW	$ + 2
 	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
 	LD	HL,(LBP) ; pointer to token 
@@ -108,7 +108,7 @@ ENDTOK	INC	L
 
 ; SEARCH Primitive
         DB      6,'SEA'
-        DW      TOKEN
+        DW      EXECUTE
 SEARCH  DW      $ + 2
         EXX     ; save registers
         POP     HL      ; start of header
@@ -418,7 +418,7 @@ LBEND	DW	0
 
 ; CORE points to Core Vocab (first entry in dictionary)
 CORE    DW      DICT_BEG
-  
+
 ;---- CONTEXT... points to Vocabulary?
 CTXTPTR DW      DP
 ; Dictonary pointer
