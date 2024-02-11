@@ -149,7 +149,7 @@ FLAG    PUSH    BC      ; push flag
         JP      (IY)    ; back to NEXT
 
 ; @ - AT (Assembler won't allow @ for a label.)
-        DB      1,'@   '   ; Search will find length of 1 and only look at first char. others are spaces to fill 4 bytes.
+        DB      1,'@',0,0   ; Search will find length of 1 and only look at first char. others are spaces to fill 3 bytes.
         DW      CONTEXT - 6
 AT      DW      $ + 2
         POP     HL 
