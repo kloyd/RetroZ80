@@ -108,7 +108,7 @@ ENDTOK	INC	L
 
 ; SEARCH Primitive
         DB      6,'SEA'
-        DW      EXECUTE - 6     ; Point to the Entry proper.
+        DW      AT - 6     ; Point to the Entry proper.
 SEARCH  DW      $ + 2
         EXX     ; save registers
         POP     HL      ; start of header
@@ -147,6 +147,23 @@ NXTHDR  POP     HL      ; start of current header
 FLAG    PUSH    BC      ; push flag
         EXX             ;Restore registers
         JP      (IY)    ; back to NEXT
+
+; @ - AT (Assembler won't allow @ for a label.)
+        DB      1,'@   '   ; Search will find length of 1 and only look at first char. others are spaces to fill 4 bytes.
+        DW      CONTEXT - 6
+AT      DW      $ + 2
+        POP     HL 
+        LD      E, (HL) ; low byte at address
+        INC     HL 
+        LD      D, (HL) ; high byte
+        PUSH    DE
+        JP      (IY)
+
+; CONTEXT, push address of Vocabulary to stack.
+        DB      7,'CON' 
+        DW      EXECUTE - 6
+CONTEXT DW      $ + 2
+
 
 ; EXECUTE primitive needs a dictionary entry for defining words.
 ; This is a model for all other Primitive words that will be added to the dictionary
@@ -272,15 +289,6 @@ _ELSE   LD      A,(BC)  ; get jump byte
         INC     B       ;  Yes 
 OUT     JP      (IY)
 
-AT      DW      $ + 2
-        POP     HL 
-        LD      E, (HL) ; low byte at address
-        INC     HL 
-        LD      D, (HL) ; high byte
-        PUSH    DE
-        JP      (IY)
-
-CONTEXT DW      $ + 2
 
 
 DUP     DW      $ + 2
