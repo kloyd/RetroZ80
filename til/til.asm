@@ -6,7 +6,7 @@
 ; ***
 
 ; Non Standard Z80 MC
-STD_CPM	EQU 0
+stdcpm	EQU 1
 
 ;---------- Put in CP/M Transient Memory space.
 	ORG	100h
@@ -31,13 +31,16 @@ ABORT	LD	SP,STACK
 	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
 ; Entry point of OUTER interpreter.
-OUTER	DW	TYPE 
+OUTER	DW $ + 2
+	DW	TYPE 
 	DW	INLINE
 	DW	ASPACE
 	DW	TOKEN
-	DW	TILHALT 
 	DW 	QSEARCH	; Leaves something on the stack if found or not found?
+	DW	TILHALT 
 	DW	@IF
+
+
 
 ; --------- Inner Interpreter
 SEMI	DW	$ + 2
@@ -169,10 +172,46 @@ CONTEXT DW      $ + 2
 ; This is a model for all other Primitive words that will be added to the dictionary
 ;
 	DB	7,'EXE'	; Header for dictionary search
-	DW	0		; Link address 0000 == End of Linked List.
+	DW	C@ - 6		; Link address 0000 == End of Linked List.
 EXECUTE DW	$ + 2		; Address of EXECUTE.
 	POP	HL		; primitive code.
 	JP	RUN
+
+	DB 2,'C@ '
+	DW	DROP - 6
+C@	DW $ + 2
+	POP		HL
+	LD		E,(HL)
+	LD		A,E
+	RLA
+	SBC		A,A 
+	LD		D,A 
+	PUSH   	DE
+	JP (IY)
+
+	DB	4,'DRO'
+	DW 	STATE - 6
+DROP	DW	$ + 2
+	POP	HL
+	JP (IY)
+
+	DB 5,'STA' ; STATE
+	DW	CX - 6
+STATE
+	DW	$ + 2
+
+	;; PUSH TO STACK ADDRESS OF SYSTEM STATE VARIABLE 
+	; TODO
+
+	DB	2,'C! '
+	DW	COMPILER - 6
+CX 	DW	$ + 2
+
+	DB 8, 'COM'   ; PILER --- See *SYS !!! this is an offset to compiler points to last address of compiler dictionary.
+	DW	0000
+COMPILER
+	DW	$ + 2
+	DW 0000
 
 ;----------   End of Dictonary Entries
 
@@ -186,7 +225,28 @@ QSEARCH DW      $ + 2
         DW      SEARCH
         DW      DUP
         DW      @IF
-        
+		DB		20H
+        DW		MODE
+		DW		C@
+		DW		@IF
+		DB		19H
+		DW		DROP
+		DW		COMPILER
+		DW		AT 
+		DW		SEARCH
+		DW		DUP
+		DW		@IF 
+		DB		06H
+		DW		0
+		DW		@ELSE
+		DB		03
+		DW		1
+		DW		STATE
+		DW		CX
+		DW		SEMI
+
+
+
 
 ; TYPE - String with length byte (0a1234567890) printed to console.
 TYPE	DW	$ + 2
@@ -282,12 +342,13 @@ QNUMBER		DW $ + 2
         INC BC 
 	JP (IY)
 
+@ELSE	DW $ + 2
 _ELSE   LD      A,(BC)  ; get jump byte
         ADD     A, C       ; add to IR
         LD      C, A    ; Reset IR
-        JR      NC, OUT ; Past Page?
+        JR      NC, OUTPG ; Past Page?
         INC     B       ;  Yes 
-OUT     JP      (IY)
+OUTPG     JP      (IY)
 
 
 
@@ -300,7 +361,7 @@ DUP     DW      $ + 2
 ; For Z80 MC - DDT was changed to use RST 6 since the hardware uses RST 7.
 ; For Standard CP/M
 TILHALT	DW	$ + 2
-	IF STD_CPM = 1
+	IF stdcpm == 1
 	RST	7
 	ELSE
 	RST 	6
