@@ -31,8 +31,7 @@ ABORT	LD	SP,STACK
 	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
 ; Entry point of OUTER interpreter.
-OUTER	DW $ + 2
-	DW	TYPE 
+OUTER	DW	TYPE 
 	DW	INLINE
 	DW	ASPACE
 	DW	TOKEN
@@ -217,8 +216,7 @@ COMPILER
 
 ;
 ; ?SEARCH - Secondary to search dictionary.
-QSEARCH DW      $ + 2
-        DW      COLON
+QSEARCH DW      COLON
         DW      CONTEXT
         DW      AT 
         DW      AT 
