@@ -2,13 +2,17 @@
 ; Outer Interpreter
 ; Author Kelly Loyd
 ; Target System
-;   Z80 CP/M 64K RAM 
+;   Z80 CP/M 64K RAM
 ; ***
 
 ; Non Standard Z80 MC
-stdcpm	EQU 1
+STD_CPM	EQU 1
+CPM	EQU	0
 
 ;---------- Put in CP/M Transient Memory space.
+	ORG	0H
+	JP	START
+
 	ORG	100h
 
 ;---------- START/RESTART
@@ -22,7 +26,7 @@ START	LD	DE,RSTMSG
 ABORT	LD	SP,STACK
 	PUSH	DE
 	LD	HL,0
-	LD	(MODE),HL
+	LD	(MODEPTR),HL
 	LD	IY,NEXT
 	LD	IX,RETURN
 	LD	HL,8080h
@@ -31,13 +35,13 @@ ABORT	LD	SP,STACK
 	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
 ; Entry point of OUTER interpreter.
-OUTER	DW	TYPE 
+OUTER	DW	TYPE
 	DW	INLINE
 	DW	ASPACE
 	DW	TOKEN
 	DW 	QSEARCH	; Leaves something on the stack if found or not found?
-	DW	TILHALT 
-	DW	@IF
+	DW	TILHALT
+	DW	AT_IF
 
 
 
@@ -57,7 +61,7 @@ RUN	LD	E,(HL)	; @WA -> CA (Code Address)
 	INC	HL	; WA = WA + 2
 	LD	D,(HL)
 	INC	HL
-	EX	DE,HL	; CA -> PC 
+	EX	DE,HL	; CA -> PC
 	JP	(HL)
 
 COLON	DEC	IX
@@ -72,39 +76,39 @@ COLON	DEC	IX
 ;----------   IMPORTANT - Start of Vocabulary, Dictionary Entries
 ;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
 DICT_BEG
-        DB 5,'TOK'	; TOKEN ID 
+        DB 5,'TOK'	; TOKEN ID
 	DW	SEARCH - 6      ; should point to the Entry start.
 TOKEN	DW	$ + 2
 	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
-	LD	HL,(LBP) ; pointer to token 
-	LD	DE,(DP) ; pointer to Dictionary 
-	POP 	BC	; space left by ASPACE 
+	LD	HL,(LBP) ; pointer to token
+	LD	DE,(DP) ; pointer to Dictionary
+	POP 	BC	; space left by ASPACE
 	LD	A,20H 	; space code
 	CP	C 	; space?
 	JR 	NZ, TOK
 IGNLB	CP	(HL)
 	JR	NZ,TOK
-	INC	L 
+	INC	L
 	JR 	IGNLB
 TOK	PUSH	HL
-COUNT	INC	B 
+COUNT	INC	B
 	INC 	L
 	LD 	A,(HL)
 	CP 	C
-	JR 	Z,ENDTOK 
+	JR 	Z,ENDTOK
 	RLA
-	JR 	NC,COUNT 
-	DEC	L 
-ENDTOK	INC	L 
-	LD 	(LBP), HL 
-	LD	A,B 
-	LD	(DE), A 
-	INC	DE 
-	POP	HL 
-	LD 	C,B 
-	LD 	B,0 
-	LDIR  		; Move token to dictionary 
-	EXX 
+	JR 	NC,COUNT
+	DEC	L
+ENDTOK	INC	L
+	LD 	(LBP), HL
+	LD	A,B
+	LD	(DE), A
+	INC	DE
+	POP	HL
+	LD 	C,B
+	LD 	B,0
+	LDIR  		; Move token to dictionary
+	EXX
 	JP 	(IY)
 
 
@@ -123,7 +127,7 @@ TESTIT  PUSH    HL      ; save start of header
         CP      4       ; Is length over 3?
         JR      C, BEL04        ; skip set 3
         LD      A, 3    ; length = 3
-BEL04   LD      B, A     
+BEL04   LD      B, A
 NEXTCH  INC     HL      ; Bump header
         INC     DE      ; bump dictionary pointer.
         LD      A, (DE) ; next character
@@ -131,10 +135,10 @@ NEXTCH  INC     HL      ; Bump header
         JR      NZ, NXTHDR      ; Go to next header entry.
         DJNZ    NEXTCH          ; next character
         POP     HL      ; start of found header
-        LD      DE,6    ; start plus 6 
+        LD      DE,6    ; start plus 6
         ADD     HL,DE   ; == Word Address
         PUSH    HL      ; push WA; BC = 0 for Flag.
-        JR      FLAG 
+        JR      FLAG
 NXTHDR  POP     HL      ; start of current header
         LD      DE,4    ; plus 4 == Link Address (pointer to next entry)
         ADD     HL, DE  ; To Next keyword
@@ -142,8 +146,8 @@ NXTHDR  POP     HL      ; start of current header
         INC     HL
         LD      D, (HL)
         EX      DE, HL
-        LD      A, H 
-        OR      L 
+        LD      A, H
+        OR      L
         JR      NZ, TESTIT ; not 0, test next header.
         LD      C, 1    ; false
 FLAG    PUSH    BC      ; push flag
@@ -154,18 +158,28 @@ FLAG    PUSH    BC      ; push flag
         DB      1,'@',0,0   ; Search will find length of 1 and only look at first char. others are spaces to fill 3 bytes.
         DW      CONTEXT - 6
 AT      DW      $ + 2
-        POP     HL 
+        POP     HL
         LD      E, (HL) ; low byte at address
-        INC     HL 
+        INC     HL
         LD      D, (HL) ; high byte
         PUSH    DE
         JP      (IY)
 
-; CONTEXT, push address of Vocabulary to stack.
-        DB      7,'CON' 
-        DW      EXECUTE - 6
+; CONTEXT, pushes to the stack the address of Vocabulary
+        DB      7,'CON'
+        DW	MODE - 6
 CONTEXT DW      $ + 2
+	LD	DE, CTXTPTR
+	PUSH	DE
+	JP	(IY)
 
+; MODE, pushes mode pointer to stack
+	DB	4,'MOD'
+	DW	EXECUTE -6
+MODE	DW	$ + 2
+	LD	DE, MODEPTR
+	PUSH	DE
+	JP	(IY)
 
 ; EXECUTE primitive needs a dictionary entry for defining words.
 ; This is a model for all other Primitive words that will be added to the dictionary
@@ -183,8 +197,8 @@ C@	DW $ + 2
 	LD		E,(HL)
 	LD		A,E
 	RLA
-	SBC		A,A 
-	LD		D,A 
+	SBC		A,A
+	LD		D,A
 	PUSH   	DE
 	JP (IY)
 
@@ -199,7 +213,7 @@ DROP	DW	$ + 2
 STATE
 	DW	$ + 2
 
-	;; PUSH TO STACK ADDRESS OF SYSTEM STATE VARIABLE 
+	;; PUSH TO STACK ADDRESS OF SYSTEM STATE VARIABLE
 	; TODO
 
 	DB	2,'C! '
@@ -218,30 +232,30 @@ COMPILER
 ; ?SEARCH - Secondary to search dictionary.
 QSEARCH DW      COLON
         DW      CONTEXT
-        DW      AT 
-        DW      AT 
+        DW      AT
+        DW      AT
         DW      SEARCH
         DW      DUP
-        DW      @IF
-		DB		20H
-        DW		MODE
-		DW		C@
-		DW		@IF
-		DB		19H
-		DW		DROP
-		DW		COMPILER
-		DW		AT 
-		DW		SEARCH
-		DW		DUP
-		DW		@IF 
-		DB		06H
-		DW		0
-		DW		@ELSE
-		DB		03
-		DW		1
-		DW		STATE
-		DW		CX
-		DW		SEMI
+        DW      AT_IF
+	DB	20H
+        DW	MODE
+	DW	C@
+	DW	AT_IF
+	DB	19H
+	DW	DROP
+	DW	COMPILER
+	DW	AT
+	DW	SEARCH
+	DW	DUP
+	DW	AT_IF
+	DB	06H
+	DW	0
+	DW	AT_ELSE
+	DB	03
+	DW	1
+	DW	STATE
+	DW	CX
+	DW	SEMI
 
 
 
@@ -292,30 +306,30 @@ TSTCR	CP	CR
 	JR	Z,LAST1
 	BIT	7,L
 	JR	NZ,IEND
-SAVEIT	LD	(HL),A 
+SAVEIT	LD	(HL),A
 	CP	61H	; Less than LC A ?
 	JR	C,NOTLC
 	CP	7BH	; MORE THAN LC Z?
 	JR	NC,NOTLC
 	RES	5,(HL)
-NOTLC	INC	L 
+NOTLC	INC	L
 	JR	ISSUE
-IEND	DEC	L 
-	LD	C,A 
-	LD	A,BKSP 
-	CALL	_ECHO 
-	LD	A,C 
-	JR 	SAVEIT 
-LAST1	LD	A, SPACE 
+IEND	DEC	L
+	LD	C,A
+	LD	A,BKSP
 	CALL	_ECHO
-	POP	BC 
+	LD	A,C
+	JR 	SAVEIT
+LAST1	LD	A, SPACE
+	CALL	_ECHO
+	POP	BC
 	JP	(IY)	; Return to NEXT inner interpreter.
 
 ; Push 20h to stack, will pop into BC in TOKEN, and BC will be 0020h
 ASPACE	DW	$ + 2
 	LD	DE, 20h
 	PUSH	DE
-	JP	(IY)	
+	JP	(IY)
 
 
 
@@ -332,20 +346,20 @@ QNUMBER		DW $ + 2
 	NOP
 	JP (IY)
 
-@IF	DW $ + 2
+AT_IF	DW $ + 2
 	POP HL
-        LD A,L 
-        OR H 
-        JP Z,_ELSE 
-        INC BC 
+        LD A,L
+        OR H
+        JP Z,_ELSE
+        INC BC
 	JP (IY)
 
-@ELSE	DW $ + 2
+AT_ELSE	DW $ + 2
 _ELSE   LD      A,(BC)  ; get jump byte
         ADD     A, C       ; add to IR
         LD      C, A    ; Reset IR
         JR      NC, OUTPG ; Past Page?
-        INC     B       ;  Yes 
+        INC     B       ;  Yes
 OUTPG     JP      (IY)
 
 
@@ -359,11 +373,10 @@ DUP     DW      $ + 2
 ; For Z80 MC - DDT was changed to use RST 6 since the hardware uses RST 7.
 ; For Standard CP/M
 TILHALT	DW	$ + 2
-	IF stdcpm == 1
-	RST	7
-	ELSE
-	RST 	6
-	ENDIF
+
+	RST	38H
+;	RST 	6
+;	ENDIF
 
 
 ; INVALID NUMBER?
@@ -401,7 +414,7 @@ _PATCH	DB	0
 
 ;----------------------------------------
 ; CP/M Machine Specific routines
-; 
+;
 ; *   Internal Routines interfacing with Operating System.
 ; * _ECHO - Echo a character to terminal
 ; * _KEY - Read a key from terminal
@@ -422,41 +435,48 @@ C_RAWIO EQU     06H
 ; til has own write str using _ECHO
 ;WRITESTR        EQU     9H
 PRTCHR  EQU     02H
-BDOS    EQU     05H 
+BDOS    EQU     05H
 
 ; Output one character.
 ; A = Input Char.
 ; preserve BC register.
 ; preserve HL register.
 _ECHO
-	PUSH HL
-        PUSH BC 
-	PUSH DE
-	LD D,A 
-	LD E,A
-        LD C, PRTCHR
-        CALL BDOS
-        POP DE 
-	POP BC
-	POP HL
+;#IF CPM == 1
+;	PUSH HL
+ ;       PUSH BC
+;	PUSH DE
+;	LD D,A
+;	LD E,A
+ ;       LD C, PRTCHR
+  ;      CALL BDOS
+   ;     POP DE
+;	POP BC
+;	POP HL
+;ELSE
+	OUT (01), A
+;ENDIF
         RET
 
-; Get a key 
+; Get a key
 _KEY
 ; Preserve BC, DE, and HL.
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-WAITKEY LD	C, C_RAWIO
-        LD	DE,FFFFh
-        CALL    BDOS
-        OR 	A 
-        JR 	Z,WAITKEY
-	POP	HL
-        POP	DE
-        POP	BC
+;	PUSH	BC
+;	PUSH	DE
+;	PUSH	HL
+;WAITKEY LD	C, C_RAWIO
+;        LD	DE,FFFFh
+;        CALL    BDOS
+;        OR 	A
+;        JR 	Z,WAITKEY
+;	POP	HL
+;        POP	DE
+;        POP	BC
+INKEYW	IN A, (00H)
+	AND FFH
+	JR Z, INKEYW
 ; Character returned in A register.
-        RET      
+        RET
 
 ; Output CR LF to console.
 _CRLF
@@ -476,7 +496,7 @@ BKSP	EQU	08h	; ctrl-H backspace
 
 ; Variables
 BASE	DB	0	; BASE for restart/warm start
-MODE	DB	0	; MODE
+MODEVAR	DB	0	; MODE
 LBP	DW	0 	; line buffer pointer
 LENGTH	EQU	128	; buffer length
 	ORG	400h	; put on page boundary
@@ -486,8 +506,15 @@ LBEND	DW	0
 ; CORE points to Core Vocab (first entry in dictionary)
 CORE    DW      DICT_BEG
 
-;---- CONTEXT... points to Vocabulary?
-CTXTPTR DW      DP
+; SYS - hmm
+SYS	DW	CORE
+
+;---- used by CONTEXT... points to Vocabulary?
+CTXTPTR DW      CORE
+MODEPTR	DW	MODEVAL
+
+MODEVAL	DB	0
+
 ; Dictonary pointer
 DP	DW	DICT
 STACK	EQU	8000h
@@ -502,4 +529,7 @@ DICT    DS      4000
 
 
 
-	END	0000
+	END
+
+
+'oshonsoft_bookmarks_and_breakpoints_info:,1722,1802,3502
