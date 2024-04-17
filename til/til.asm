@@ -9,11 +9,16 @@
 STD_CPM	EQU 1
 CPM	EQU	0
 
-;---------- Put in CP/M Transient Memory space.
+; NOTES:
+;  Since the Z80 IDE assembler can't do conditionals... 
+; uncomment CPM stuff
+; comment IDE stuff
+; or vice versa depending on the selected environment.
+;---------- Z80 IDE by Oshonsoft
 	ORG	0H
-	JP	START
 
-	ORG	100h
+; For CP/M - should be at 100H (Transient Memory space) to load correctly.
+;	ORG	100h
 
 ;---------- START/RESTART
 START	LD	DE,RSTMSG
@@ -437,6 +442,7 @@ C_RAWIO EQU     06H
 PRTCHR  EQU     02H
 BDOS    EQU     05H
 
+; CPM or IDE 
 ; Output one character.
 ; A = Input Char.
 ; preserve BC register.
@@ -444,13 +450,13 @@ BDOS    EQU     05H
 _ECHO
 ;#IF CPM == 1
 ;	PUSH HL
- ;       PUSH BC
+;	PUSH BC
 ;	PUSH DE
 ;	LD D,A
 ;	LD E,A
- ;       LD C, PRTCHR
-  ;      CALL BDOS
-   ;     POP DE
+;	LD C, PRTCHR
+;	CALL BDOS
+;	POP DE
 ;	POP BC
 ;	POP HL
 ;ELSE
