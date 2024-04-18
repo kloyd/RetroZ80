@@ -365,7 +365,7 @@ _ELSE   LD      A,(BC)  ; get jump byte
         LD      C, A    ; Reset IR
         JR      NC, OUTPG ; Past Page?
         INC     B       ;  Yes
-OUTPG     JP      (IY)
+OUTPG	JP      (IY)
 
 
 
