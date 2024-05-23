@@ -537,5 +537,3 @@ DICT    DS      4000
 
 	END
 
-
-'oshonsoft_bookmarks_and_breakpoints_info:,1722,1802,3502
