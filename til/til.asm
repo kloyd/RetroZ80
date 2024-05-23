@@ -9,16 +9,11 @@
 STD_CPM	EQU 1
 CPM	EQU	0
 
-; NOTES:
-;  Since the Z80 IDE assembler can't do conditionals... 
-; uncomment CPM stuff
-; comment IDE stuff
-; or vice versa depending on the selected environment.
-;---------- Z80 IDE by Oshonsoft
+;---------- Put in CP/M Transient Memory space.
 	ORG	0H
+	JP	START
 
-; For CP/M - should be at 100H (Transient Memory space) to load correctly.
-;	ORG	100h
+	ORG	100h
 
 ;---------- START/RESTART
 START	LD	DE,RSTMSG
@@ -47,6 +42,17 @@ OUTER	DW	TYPE
 	DW 	QSEARCH	; Leaves something on the stack if found or not found?
 	DW	TILHALT
 	DW	AT_IF
+	DB	0BH
+	DW	QNUMBER
+	DW	AT_END
+	DB	F3H
+	DW	QUESTION
+	DW	AT_WHILE
+	DB	EAH
+	DW	QEXECUTE
+	DW	AT_WHILE
+	DB	E9H
+; End of OUTER - Infinite loop
 
 
 
@@ -337,20 +343,58 @@ ASPACE	DW	$ + 2
 	JP	(IY)
 
 
-
-; ABSENT?
-; - NO -> ?EXECUTE -> ASPACE
-; - YES -> NUMBER
-
-; ?EXECUTE - Execute Secondary.
+; TODO ?EXECUTE - Execute Secondary.
 QEXECUTE	DW $ + 2
 	NOP
 	JP (IY)
 
-QNUMBER		DW $ + 2
-	NOP
-	JP (IY)
+; TODO ?NUMBER - Is the token a Number?
+; No - return false
+; Yes - push number to stack
+QNUMBER	DW	COLON
+	DW	NUMBER
+	DW	AT_IF
+	DB	25H
+	DW	MODE
+	DW	C@
+	DW	AT_IF
+	DB	19H
+	DW	SINGLE
+	DW	AT_IF
+	DB	0CH
+	DW	*#*# ; wot is this
+	DW	,
+	DW	,
+	DW	AT_ELSE
+	DB	09H
+	DW	*#*C# ; ???
+	DW	,
+	DW	C,
+	DB	0
+	DW	AT_ELSE
+	DB	03H
+	DB	1
+	DW	SEMI
 
+; NUMBER
+NUMBER	DW	$ + 2
+	EXX
+	LD	HL,(DP) ; GET DP
+	LD	B,(HL)  ; GET LEN
+	INC	HL	;
+	LD	A,(HL)	; GET FIRST CHAR
+	CP	2DH 	; MINUS?
+	LD	A,0
+	JR	NZ,SKIPSAV
+	DEC	A
+	DEC	B
+	INC	HL
+SKIPSAV EX	AF, AF'
+
+
+; @IF
+; Top of stack != 0 (true), BC++
+; Top of stack == 0 (false), BC <- BC + offset Byte
 AT_IF	DW $ + 2
 	POP HL
         LD A,L
@@ -365,8 +409,18 @@ _ELSE   LD      A,(BC)  ; get jump byte
         LD      C, A    ; Reset IR
         JR      NC, OUTPG ; Past Page?
         INC     B       ;  Yes
-OUTPG	JP      (IY)
+OUTPG     JP      (IY)
 
+
+; TODO *WHILE
+AT_WHILE  DW $ + 2
+
+	JP (IY)
+
+; TODO *END
+AT_END  DW $ + 2
+
+	JP (IY)
 
 
 DUP     DW      $ + 2
@@ -442,7 +496,6 @@ C_RAWIO EQU     06H
 PRTCHR  EQU     02H
 BDOS    EQU     05H
 
-; CPM or IDE 
 ; Output one character.
 ; A = Input Char.
 ; preserve BC register.
@@ -450,13 +503,13 @@ BDOS    EQU     05H
 _ECHO
 ;#IF CPM == 1
 ;	PUSH HL
-;	PUSH BC
+ ;       PUSH BC
 ;	PUSH DE
 ;	LD D,A
 ;	LD E,A
-;	LD C, PRTCHR
-;	CALL BDOS
-;	POP DE
+ ;       LD C, PRTCHR
+  ;      CALL BDOS
+   ;     POP DE
 ;	POP BC
 ;	POP HL
 ;ELSE
