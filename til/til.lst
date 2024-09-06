@@ -1,0 +1,637 @@
+                        ; *****  TIL
+                        ; Outer Interpreter
+                        ; Author Kelly Loyd
+                        ; Target System
+                        ;   Z80 CP/M 64K RAM
+                        ; ***
+
+                        ; Non Standard Z80 MC
+      = 0001            std_cpm = 1
+                        ; Use CPM BDOS?
+      = 0001            CPM = 1
+
+                        ;---------- Put in CP/M Transient Memory space.
+                         IF CPM = 1
+0100                    	ORG	100H
+                         ELSE
+                         ENDIF
+0100  C3 0301           	JP	START
+
+                        ;---------- START/RESTART
+0103  11 8D04           START	LD	DE,RSTMSG
+0106  3A B703           	LD	A,(BASE)
+0109  A7                	AND	A
+010A  20 08             	JR	NZ, ABORT
+010C  3E 0A             	LD	A,10
+010E  32 B703           	LD	(BASE),A
+0111  11 9A04           	LD	DE,SRTMSG
+0114  31 0080           ABORT	LD	SP,STACK
+0117  D5                	PUSH	DE
+0118  21 0000           	LD	HL,0
+011B  22 8804           	LD	(MODEPTR),HL
+011E  FD21 5A01         	LD	IY,NEXT
+0122  DD21 7E03         	LD	IX,RETURN
+0126  21 8080           	LD	HL,8080h
+0129  22 8004           	LD	(LBEND),HL
+012C  01 3201           	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
+012F  C3 5A01           	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
+
+                        ; Entry point of OUTER interpreter.
+0132  8802              OUTER	DW	TYPE
+0134  9C02              	DW	INLINE
+0136  F402              	DW	ASPACE
+0138  7A01              	DW	TOKEN
+013A  5802              	DW 	QSEARCH	; Leaves something on the stack if found or not found?
+013C  3D03              	DW	AT_IF
+013E  0B                	DB	0BH
+013F  0103              	DW	QNUMBER
+0141  5603              	DW	AT_END
+0143  F3                	DB	F3H
+0144  6403              	DW	QUESTION
+0146  5203              	DW	AT_WHILE
+0148  EA                	DB	EAH
+0149  FC02              	DW	QEXECUTE
+014B  5203              	DW	AT_WHILE
+014D  E9                	DB	E9H
+                        ; End of OUTER - Infinite loop
+
+
+
+                        ; --------- Inner Interpreter
+014E  5001              SEMI	DW	$ + 2
+0150  DD4E 00           	LD	C,(IX+0)
+0153  DD23              	INC	IX
+0155  DD46 00           	LD	B,(IX+0)
+0158  DD23              	INC	IX
+015A  0A                NEXT	LD	A,(BC)	; BC = Instruction Register
+015B  6F                	LD	L,A	; @I -> WA (HL = word address)
+015C  03                	INC	BC
+015D  0A                	LD	A,(BC)
+015E  67                	LD	H,A
+015F  03                	INC	BC	; I = I + 2
+0160  5E                RUN	LD	E,(HL)	; @WA -> CA (Code Address)
+0161  23                	INC	HL	; WA = WA + 2
+0162  56                	LD	D,(HL)
+0163  23                	INC	HL
+0164  EB                	EX	DE,HL	; CA -> PC
+0165  E9                	JP	(HL)
+
+0166  DD2B              COLON	DEC	IX
+0168  DD70 00           	LD	(IX+0),B
+016B  DD2B              	DEC	IX
+016D  DD71 00           	LD	(IX+0),C
+0170  4B                	LD	C,E
+0171  42                	LD	B,D
+0172  FDE9              	JP	(IY)
+                        ;----------- End of Inner -----
+
+                        ;----------   IMPORTANT - Start of Vocabulary, Dictionary Entries
+                        ;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
+0174                    DICT_BEG
+0174  05544F4B                  DB 5,'TOK'	; TOKEN ID
+0178  AB01              	DW	SEARCH - 6      ; should point to the Entry start.
+017A  7C01              TOKEN	DW	$ + 2
+017C  D9                	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
+017D  2A B903           	LD	HL,(LBP) ; pointer to token
+0180  ED5B 8B04         	LD	DE,(DP) ; pointer to Dictionary
+0184  C1                	POP 	BC	; space left by ASPACE
+0185  3E 20             	LD	A,20H 	; space code
+0187  B9                	CP	C 	; space?
+0188  20 06             	JR 	NZ, TOK
+018A  BE                IGNLB	CP	(HL)
+018B  20 03             	JR	NZ,TOK
+018D  2C                	INC	L
+018E  18 FA             	JR 	IGNLB
+0190  E5                TOK	PUSH	HL
+0191  04                COUNT	INC	B
+0192  2C                	INC 	L
+0193  7E                	LD 	A,(HL)
+0194  B9                	CP 	C
+0195  28 04             	JR 	Z,ENDTOK
+0197  17                	RLA
+0198  30 F7             	JR 	NC,COUNT
+019A  2D                	DEC	L
+019B  2C                ENDTOK	INC	L
+019C  22 B903           	LD 	(LBP), HL
+019F  78                	LD	A,B
+01A0  12                	LD	(DE), A
+01A1  13                	INC	DE
+01A2  E1                	POP	HL
+01A3  48                	LD 	C,B
+01A4  06 00             	LD 	B,0
+01A6  EDB0              	LDIR  		; Move token to dictionary
+01A8  D9                	EXX
+01A9  FDE9              	JP 	(IY)
+
+
+                        ; SEARCH Primitive
+01AB  06534541                  DB      6,'SEA'
+01AF  EB01                      DW      AT - 6     ; Point to the Entry proper.
+01B1  B301              SEARCH  DW      $ + 2
+01B3  D9                        EXX     ; save registers
+01B4  E1                        POP     HL      ; start of header
+01B5  E5                TESTIT  PUSH    HL      ; save start of header
+01B6  ED5B 8B04                 LD      DE,(DP)         ;dictionary pointer.
+01BA  0E 00                     LD      C, 0    ; used with B as false flag
+01BC  1A                        LD      A,(DE)  ;get dictionary token length
+01BD  BE                        CP      (HL)    ; same as keyword length?
+01BE  C2 D801                   JP      NZ, NXTHDR      ; go to next entry in linked list.
+01C1  FE 04                     CP      4       ; Is length over 3?
+01C3  38 02                     JR      C, BEL04        ; skip set 3
+01C5  3E 03                     LD      A, 3    ; length = 3
+01C7  47                BEL04   LD      B, A
+01C8  23                NEXTCH  INC     HL      ; Bump header
+01C9  13                        INC     DE      ; bump dictionary pointer.
+01CA  1A                        LD      A, (DE) ; next character
+01CB  BE                        CP      (HL)
+01CC  20 0A                     JR      NZ, NXTHDR      ; Go to next header entry.
+01CE  10 F8                     DJNZ    NEXTCH          ; next character
+01D0  E1                        POP     HL      ; start of found header
+01D1  11 0600                   LD      DE,6    ; start plus 6
+01D4  19                        ADD     HL,DE   ; == Word Address
+01D5  E5                        PUSH    HL      ; push WA; BC = 0 for Flag.
+01D6  18 0F                     JR      FLAG
+01D8  E1                NXTHDR  POP     HL      ; start of current header
+01D9  11 0400                   LD      DE,4    ; plus 4 == Link Address (pointer to next entry)
+01DC  19                        ADD     HL, DE  ; To Next keyword
+01DD  5E                        LD      E, (HL) ; get link address
+01DE  23                        INC     HL
+01DF  56                        LD      D, (HL)
+01E0  EB                        EX      DE, HL
+01E1  7C                        LD      A, H
+01E2  B5                        OR      L
+01E3  20 D0                     JR      NZ, TESTIT ; not 0, test next header.
+01E5  0E 01                     LD      C, 1    ; false
+01E7  C5                FLAG    PUSH    BC      ; push flag
+01E8  D9                        EXX             ;Restore registers
+01E9  FDE9                      JP      (IY)    ; back to NEXT
+
+                        ; @ - AT (Assembler won't allow @ for a label.)
+01EB  01400000                  DB      1,'@',0,0   ; Search will find length of 1 and only look at first char. others are spaces to fill 3 bytes.
+01EF  FA01                      DW      CONTEXT - 6
+01F1  F301              AT      DW      $ + 2
+01F3  E1                        POP     HL
+01F4  5E                        LD      E, (HL) ; low byte at address
+01F5  23                        INC     HL
+01F6  56                        LD      D, (HL) ; high byte
+01F7  D5                        PUSH    DE
+01F8  FDE9                      JP      (IY)
+
+                        ; CONTEXT, pushes to the stack the address of Vocabulary
+01FA  07434F4E                  DB      7,'CON'
+01FE  0802                      DW	MODE - 6
+0200  0202              CONTEXT DW      $ + 2
+0202  11 8604           	LD	DE, CTXTPTR
+0205  D5                	PUSH	DE
+0206  FDE9              	JP	(IY)
+
+                        ; MODE, pushes mode pointer to stack
+0208  044D4F44          	DB	4,'MOD'
+020C  1602              	DW	EXECUTE -6
+020E  1002              MODE	DW	$ + 2
+0210  11 8804           	LD	DE, MODEPTR
+0213  D5                	PUSH	DE
+0214  FDE9              	JP	(IY)
+
+                        ; EXECUTE primitive needs a dictionary entry for defining words.
+                        ; This is a model for all other Primitive words that will be added to the dictionary
+                        ;
+0216  07455845          	DB	7,'EXE'	; Header for dictionary search
+021A  2202              	DW	C@ - 6		; Link address 0000 == End of Linked List.
+021C  1E02              EXECUTE DW	$ + 2		; Address of EXECUTE.
+021E  E1                	POP	HL		; primitive code.
+021F  C3 6001           	JP	RUN
+
+0222  02434020          	DB 2,'C@ '
+0226  3302              	DW	DROP - 6
+0228  2A02              C@	DW $ + 2
+022A  E1                	POP		HL
+022B  5E                	LD		E,(HL)
+022C  7B                	LD		A,E
+022D  17                	RLA
+022E  9F                	SBC		A,A
+022F  57                	LD		D,A
+0230  D5                	PUSH   	DE
+0231  FDE9              	JP (IY)
+
+0233  0444524F          	DB	4,'DRO'
+0237  3E02              	DW 	STATE - 6
+0239  3B02              DROP	DW	$ + 2
+023B  E1                	POP	HL
+023C  FDE9              	JP (IY)
+
+023E  05535441          	DB 5,'STA' ; STATE
+0242  4602              	DW	CX - 6
+0244                    STATE
+0244  4602              	DW	$ + 2
+
+                        	;; PUSH TO STACK ADDRESS OF SYSTEM STATE VARIABLE
+                        	; TODO
+
+0246  02432120          	DB	2,'C! '
+024A  4E02              	DW	COMPILER - 6
+024C  4E02              CX 	DW	$ + 2
+
+024E  08434F4D          	DB 8, 'COM'   ; PILER --- See *SYS !!! this is an offset to compiler points to last address of compiler dictionary.
+0252  0000              	DW	0000
+0254                    COMPILER
+0254  5602              	DW	$ + 2
+0256  0000              	DW 0000
+
+                        ;----------   End of Dictonary Entries
+
+                        ;
+                        ; ?SEARCH - Secondary to search dictionary.
+0258  6601              QSEARCH DW      COLON
+025A  0002                      DW      CONTEXT
+025C  F101                      DW      AT
+025E  F101                      DW      AT
+0260  B101                      DW      SEARCH
+0262  5A03                      DW      DUP
+0264  3D03                      DW      AT_IF
+0266  20                	DB	20H
+0267  0E02                      DW	MODE
+0269  2802              	DW	C@
+026B  3D03              	DW	AT_IF
+026D  19                	DB	19H
+026E  3902              	DW	DROP
+0270  5402              	DW	COMPILER
+0272  F101              	DW	AT
+0274  B101              	DW	SEARCH
+0276  5A03              	DW	DUP
+0278  3D03              	DW	AT_IF
+027A  06                	DB	06H
+027B  0000              	DW	0
+027D  4803              	DW	AT_ELSE
+027F  03                	DB	03
+0280  0100              	DW	1
+0282  4402              	DW	STATE
+0284  4C02              	DW	CX
+0286  4E01              	DW	SEMI
+
+
+
+
+                        ; TYPE - String with length byte (0a1234567890) printed to console.
+0288  8A02              TYPE	DW	$ + 2
+028A  D1                TYPEIT	POP	DE	; get address of string
+028B  E5                	PUSH	HL 	; save WA
+028C  C5                	PUSH	BC	; Save IR.
+028D  EB                	EX	DE,HL
+028E  46                	LD	B,(HL)
+028F  23                	INC	HL
+0290  7E                ONECHAR	LD	A,(HL)
+0291  CD 8A03           	CALL	_ECHO
+0294  23                	INC	HL
+0295  10 F9             	DJNZ	ONECHAR
+0297  C1                	POP	BC	; Restore IR
+0298  E1                	POP	HL	; Restore WA
+0299  C3 5A01           	JP	NEXT
+
+
+
+
+                        ; INLINE
+029C  9E02              INLINE	DW	$ + 2	;header address
+029E  C5                	PUSH	BC	; Save IR
+029F  CD AA03           ISTART	CALL	_CRLF	; Issue CR / LF on terminal for new input
+02A2  21 0004           	LD	HL, LBADD	; Buffer
+02A5  22 B903           	LD	(LBP), HL
+02A8  06 80             	LD	B, LENGTH
+02AA  36 20             CLEAR	LD	(HL), SPACE
+02AC  23                	INC	HL
+02AD  10 FB             	DJNZ	CLEAR
+02AF  2E 00             ZERO	LD	L,0
+02B1  CD 9803           INKEY	CALL	_KEY
+02B4  FE 18             	CP	LINEDEL		; CTRL-X is Line Delete
+02B6  20 05             	JR	NZ,TSTBS
+02B8  CD 8A03           	CALL	_ECHO
+02BB  18 E2             	JR ISTART
+02BD  FE 08             TSTBS	CP	BKSP		; backspace CTRL-H
+02BF  20 0B             	JR	NZ, TSTCR
+02C1  2B                	DEC	HL
+02C2  FA AF02           	JP	M,ZERO
+02C5  36 20             	LD	(HL), SPACE
+02C7  CD 8A03           ISSUE	CALL	_ECHO
+02CA  18 E5             	JR	INKEY
+02CC  FE 0D             TSTCR	CP	CR
+02CE  28 1C             	JR	Z,LAST1
+02D0  CB7D              	BIT	7,L
+02D2  20 0E             	JR	NZ,IEND
+02D4  77                SAVEIT	LD	(HL),A
+02D5  FE 61             	CP	61H	; Less than LC A ?
+02D7  38 06             	JR	C,NOTLC
+02D9  FE 7B             	CP	7BH	; MORE THAN LC Z?
+02DB  30 02             	JR	NC,NOTLC
+02DD  CBAE              	RES	5,(HL)
+02DF  2C                NOTLC	INC	L
+02E0  18 E5             	JR	ISSUE
+02E2  2D                IEND	DEC	L
+02E3  4F                	LD	C,A
+02E4  3E 08             	LD	A,BKSP
+02E6  CD 8A03           	CALL	_ECHO
+02E9  79                	LD	A,C
+02EA  18 E8             	JR 	SAVEIT
+02EC  3E 20             LAST1	LD	A, SPACE
+02EE  CD 8A03           	CALL	_ECHO
+02F1  C1                	POP	BC
+02F2  FDE9              	JP	(IY)	; Return to NEXT inner interpreter.
+
+                        ; Push 20h to stack, will pop into BC in TOKEN, and BC will be 0020h
+02F4  F602              ASPACE	DW	$ + 2
+02F6  11 2000           	LD	DE, 20h
+02F9  D5                	PUSH	DE
+02FA  FDE9              	JP	(IY)
+
+
+                        ; TODO ?EXECUTE - Execute Secondary.
+02FC  FE02              QEXECUTE	DW $ + 2
+02FE  00                	NOP
+02FF  FDE9              	JP (IY)
+
+                        ; TODO ?NUMBER - Is the token a Number?
+                        ; No - return false
+                        ; Yes - push number to stack
+0301  6601              QNUMBER	DW	COLON
+0303  2A03              	DW	NUMBER
+0305  3D03              	DW	AT_IF
+0307  25                	DB	25H
+0308  0E02              	DW	MODE
+030A  2802              	DW	C@
+030C  3D03              	DW	AT_IF
+030E  19                	DB	19H
+til.asm:364: *** Error:  Symbol 'SINGLE' undefined ***
+030F  0000              	DW	SINGLE
+0311  3D03              	DW	AT_IF
+0313  0C                	DB	0CH
+til.asm:367: *** Error:  "," expected ***
+0314  1403              	DW	*#*# ; wot is this
+til.asm:368: *** Error:  Missing operand ***
+0316  0000              	DW	,
+til.asm:369: *** Error:  Missing operand ***
+0318  0000              	DW	,
+031A  4803              	DW	AT_ELSE
+031C  09                	DB	09H
+til.asm:372: *** Error:  "," expected ***
+031D  1D03              	DW	*#*C# ; ???
+til.asm:373: *** Error:  Missing operand ***
+031F  0000              	DW	,
+til.asm:374: *** Error:  Symbol 'C' undefined ***
+til.asm:374: *** Error:  Missing operand ***
+0321  0000              	DW	C,
+0323  00                	DB	0
+0324  4803              	DW	AT_ELSE
+0326  03                	DB	03H
+0327  01                	DB	1
+0328  4E01              	DW	SEMI
+
+                        ; NUMBER
+032A  2C03              NUMBER	DW	$ + 2
+032C  D9                	EXX
+032D  2A 8B04           	LD	HL,(DP) ; GET DP
+0330  46                	LD	B,(HL)  ; GET LEN
+0331  23                	INC	HL	;
+0332  7E                	LD	A,(HL)	; GET FIRST CHAR
+0333  FE 2D             	CP	2DH 	; MINUS?
+0335  3E 00             	LD	A,0
+0337  20 03             	JR	NZ,SKIPSAV
+0339  3D                	DEC	A
+033A  05                	DEC	B
+033B  23                	INC	HL
+033C  08                SKIPSAV EX	AF, AF'
+
+
+                        ; @IF
+                        ; Top of stack != 0 (true), BC++
+                        ; Top of stack == 0 (false), BC <- BC + offset Byte
+033D  3F03              AT_IF	DW $ + 2
+033F  E1                	POP HL
+0340  7D                        LD A,L
+0341  B4                        OR H
+0342  CA 4A03                   JP Z,_ELSE
+0345  03                        INC BC
+0346  FDE9              	JP (IY)
+
+0348  4A03              AT_ELSE	DW $ + 2
+034A  0A                _ELSE   LD      A,(BC)  ; get jump byte
+034B  81                        ADD     A, C       ; add to IR
+034C  4F                        LD      C, A    ; Reset IR
+034D  30 01                     JR      NC, OUTPG ; Past Page?
+034F  04                        INC     B       ;  Yes
+0350  FDE9              OUTPG     JP      (IY)
+
+
+                        ; TODO *WHILE
+0352  5403              AT_WHILE  DW $ + 2
+
+0354  FDE9              	JP (IY)
+
+                        ; TODO *END
+0356  5803              AT_END  DW $ + 2
+
+0358  FDE9              	JP (IY)
+
+
+035A  5C03              DUP     DW      $ + 2
+035C  E1                        POP     HL
+035D  E5                        PUSH    HL
+035E  E5                        PUSH    HL
+035F  FDE9                      JP      (IY)
+
+                        ; For Z80 MC - DDT was changed to use RST 6 since the hardware uses RST 7.
+                        ; For Standard CP/M
+0361  6303              TILHALT	DW	$ + 2
+
+0363  FF                	RST	38H
+                        ;	RST 	6
+                        ;	ENDIF
+
+
+                        ; INVALID NUMBER?
+                        ; NO -> ASPACE
+                        ; YES -> QUESTION
+
+                        ; QUESTION
+0364  6603              QUESTION	DW	$ + 2
+0366  2A 8B04           	LD 	HL,(DP)
+0369  23                	INC 	HL
+036A  CB7E              	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
+036C  28 06             	JR	Z,ERROR	;NOT SET ERROR
+036E  11 8603           	LD	DE,OK
+0371  D5                	PUSH	DE
+0372  FDE9              	JP	(IY)
+0374  CD AA03           ERROR	CALL	_CRLF
+0377  FD21 7E03         	LD	IY,RETURN
+037B  C3 8802           	JP	TYPE
+037E  11 8403           RETURN	LD	DE, QMSG
+0381  C3 8903           	JP	_PATCH
+
+                        ; GOTO TYPE
+
+
+                        ; Internals
+
+0384  3F00              QMSG	DB	'?', 0
+0386  4F4B00            OK	DB	'OK',0
+
+                        ; PATCH internal routine.
+0389  00                _PATCH	DB	0
+
+
+
+
+                        ;----------------------------------------
+                        ; CP/M Machine Specific routines
+                        ;
+                        ; *   Internal Routines interfacing with Operating System.
+                        ; * _ECHO - Echo a character to terminal
+                        ; * _KEY - Read a key from terminal
+                        ; * _CRLF - Output CR/LF to terminal
+                        ;----------------------------------------
+                        ;; Handy Constants
+      = 000D            CR	EQU     0DH
+      = 000A            LF	EQU     0AH
+      = 0024            DOLLAR  EQU     24H
+      = 001B            ESC     EQU     1BH
+      = 0003            CTRLC   EQU     03H
+
+                        ; Screen print calls
+      = 0003            CHAR_IN EQU     03H
+      = 000B            C_STAT  EQU     0BH
+      = 0006            C_RAWIO EQU     06H
+
+                        ; til has own write str using _ECHO
+                        ;WRITESTR        EQU     9H
+      = 0002            PRTCHR  EQU     02H
+      = 0005            BDOS    EQU     05H
+
+                        ; Output one character.
+                        ; A = Input Char.
+                        ; preserve BC register.
+                        ; preserve HL register.
+038A                    _ECHO
+                         IF CPM = 1
+038A  E5                	PUSH HL
+038B  C5                    PUSH BC
+038C  D5                	PUSH DE
+038D  57                	LD D,A
+038E  5F                	LD E,A
+038F  0E 02                 LD C, PRTCHR
+0391  CD 0500               CALL BDOS
+0394  D1                    POP DE
+0395  C1                	POP BC
+0396  E1                	POP HL
+                          ELSE
+                          ENDIF
+0397  C9                    RET
+
+                        ; Get a key
+0398                    _KEY
+                         IF CPM = 1
+                        	; Preserve BC, DE, and HL.
+0398  C5                	PUSH	BC
+0399  D5                	PUSH	DE
+039A  E5                	PUSH	HL
+039B  0E 06             WAITKEY	LD	C, C_RAWIO
+039D  11 FFFF           		LD	DE,FFFFh
+03A0  CD 0500           		CALL    BDOS
+03A3  B7                		OR 	A
+03A4  28 F5             		JR 	Z,WAITKEY
+03A6  E1                		POP	HL
+03A7  D1                		POP	DE
+03A8  C1                		POP	BC
+                         ELSE
+                         ENDIF
+03A9  C9                        RET
+
+                        ; Output CR LF to console.
+03AA                    _CRLF
+03AA  F5                	PUSH AF
+03AB  3E 0D             	LD A, CR
+03AD  CD 8A03           	CALL _ECHO
+03B0  3E 0A             	LD A, LF
+03B2  CD 8A03           	CALL _ECHO
+03B5  F1                	POP AF
+03B6  C9                        RET
+
+                        ; Constants
+                        ;
+      = 0018            LINEDEL	EQU	18H	; ctrl-x line delete
+      = 0020            SPACE	EQU	20h	; space
+      = 0008            BKSP	EQU	08h	; ctrl-H backspace
+
+                        ; Variables
+03B7  00                BASE	DB	0	; BASE for restart/warm start
+03B8  00                MODEVAR	DB	0	; MODE
+03B9  0000              LBP	DW	0 	; line buffer pointer
+      = 0080            LENGTH	EQU	128	; buffer length
+0400                    	ORG	400h	; put on page boundary
+0400   (0080)           LBADD	DS	128	; text input buffer
+0480  0000              LBEND	DW	0
+
+                        ; CORE points to Core Vocab (first entry in dictionary)
+0482  7401              CORE    DW      DICT_BEG
+
+                        ; SYS - hmm
+0484  8204              SYS	DW	CORE
+
+                        ;---- used by CONTEXT... points to Vocabulary?
+0486  8204              CTXTPTR DW      CORE
+0488  8A04              MODEPTR	DW	MODEVAL
+
+048A  00                MODEVAL	DB	0
+
+                        ; Dictonary pointer
+048B  B004              DP	DW	DICT
+      = 8000            STACK	EQU	8000h
+
+                        ; Strings
+048D  0C205449 4C205245 RSTMSG	DB	12, ' TIL RESTART'
+0495  53544152 54
+049A  15205745 4C434F4D SRTMSG	DB	21, ' WELCOME TO RETRO TIL'
+04A2  4520544F 20524554
+04AA  524F2054 494C
+
+
+04B0   (0FA0)           DICT    DS      4000
+
+
+
+
+1450                    	END
+
+
+ABORT              0114    ASPACE             02F4    AT                 01F1
+AT_ELSE            0348    AT_END             0356    AT_IF              033D
+AT_WHILE           0352    BASE               03B7    BDOS               0005 E
+BEL04              01C7    BKSP               0008 E  C                  0000 U
+C@                 0228    CHAR_IN            0003 E  CLEAR              02AA
+COLON              0166    COMPILER           0254    CONTEXT            0200
+CORE               0482    COUNT              0191    CPM                0001 E
+CR                 000D E  CTRLC              0003 E  CTXTPTR            0486
+CX                 024C    C_RAWIO            0006 E  C_STAT             000B E
+DICT               04B0    DICT_BEG           0174    DOLLAR             0024 E
+DP                 048B    DROP               0239    DUP                035A
+ENDTOK             019B    ERROR              0374    ESC                001B E
+EXECUTE            021C    FLAG               01E7    IEND               02E2
+IGNLB              018A    INKEY              02B1    INLINE             029C
+ISSUE              02C7    ISTART             029F    LAST1              02EC
+LBADD              0400    LBEND              0480    LBP                03B9
+LENGTH             0080 E  LF                 000A E  LINEDEL            0018 E
+MODE               020E    MODEPTR            0488    MODEVAL            048A
+MODEVAR            03B8    NEXT               015A    NEXTCH             01C8
+NOTLC              02DF    NUMBER             032A    NXTHDR             01D8
+OK                 0386    ONECHAR            0290    OUTER              0132
+OUTPG              0350    PRTCHR             0002 E  QEXECUTE           02FC
+QMSG               0384    QNUMBER            0301    QSEARCH            0258
+QUESTION           0364    RETURN             037E    RSTMSG             048D
+RUN                0160    SAVEIT             02D4    SEARCH             01B1
+SEMI               014E    SINGLE             0000 U  SKIPSAV            033C
+SPACE              0020 E  SRTMSG             049A    STACK              8000 E
+START              0103    STATE              0244    STD_CPM            0001 E
+SYS                0484    TESTIT             01B5    TILHALT            0361
+TOK                0190    TOKEN              017A    TSTBS              02BD
+TSTCR              02CC    TYPE               0288    TYPEIT             028A
+WAITKEY            039B    ZERO               02AF    _CRLF              03AA
+_ECHO              038A    _ELSE              034A    _KEY               0398
+_PATCH             0389

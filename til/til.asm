@@ -6,14 +6,17 @@
 ; ***
 
 ; Non Standard Z80 MC
-STD_CPM	EQU 1
-CPM	EQU	0
+std_cpm = 1
+; Use CPM BDOS?
+CPM = 1
 
 ;---------- Put in CP/M Transient Memory space.
-	ORG	0H
+ IF CPM = 1
+	ORG	100H 
+ ELSE
+	ORG 0H 
+ ENDIF
 	JP	START
-
-	ORG	100h
 
 ;---------- START/RESTART
 START	LD	DE,RSTMSG
@@ -40,7 +43,6 @@ OUTER	DW	TYPE
 	DW	ASPACE
 	DW	TOKEN
 	DW 	QSEARCH	; Leaves something on the stack if found or not found?
-	DW	TILHALT
 	DW	AT_IF
 	DB	0BH
 	DW	QNUMBER
@@ -501,40 +503,54 @@ BDOS    EQU     05H
 ; preserve BC register.
 ; preserve HL register.
 _ECHO
-;#IF CPM == 1
-;	PUSH HL
- ;       PUSH BC
-;	PUSH DE
-;	LD D,A
-;	LD E,A
- ;       LD C, PRTCHR
-  ;      CALL BDOS
-   ;     POP DE
-;	POP BC
-;	POP HL
-;ELSE
+ IF CPM = 1
+	PUSH HL
+    PUSH BC
+	PUSH DE
+	LD D,A
+	LD E,A
+    LD C, PRTCHR
+    CALL BDOS
+    POP DE
+	POP BC
+	POP HL
+  ELSE
 	OUT (01), A
-;ENDIF
-        RET
+  ENDIF
+    RET
 
 ; Get a key
 _KEY
-; Preserve BC, DE, and HL.
-;	PUSH	BC
-;	PUSH	DE
-;	PUSH	HL
-;WAITKEY LD	C, C_RAWIO
-;        LD	DE,FFFFh
-;        CALL    BDOS
-;        OR 	A
-;        JR 	Z,WAITKEY
-;	POP	HL
-;        POP	DE
-;        POP	BC
-INKEYW	IN A, (00H)
-	AND FFH
-	JR Z, INKEYW
+ IF CPM = 1
+	; Preserve BC, DE, and HL.
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+WAITKEY	LD	C, C_RAWIO
+		LD	DE,FFFFh
+		CALL    BDOS
+		OR 	A
+		JR 	Z,WAITKEY
+		POP	HL
+		POP	DE
+		POP	BC
+ ELSE
+; - Standard MITS SIO is probably 01.
+; emulator for Z80 on Windows is port 00 but configurable.
+; MITS SIO standard.
+; Port 00h = Control Register
+; Port 01h = Data Register.
+; "If A0 is a logic high, the data channel is enabled
+; "If A0 is a logic low, the control channel is enabled
+; Bit 5 of Control channel indicates Data available.
+;
+INKEYW	IN A, (00H)	; Read Input Status.
+		AND 01H ; Bit 1 == 0 means a character is ready, so AND with 1 if not zero keep waiting.
+		JR NZ, INKEYW
 ; Character returned in A register.
+; Data Ready, should be a character here.
+		IN A, (01H)
+ ENDIF
         RET
 
 ; Output CR LF to console.
