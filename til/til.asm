@@ -364,14 +364,14 @@ QNUMBER	DW	COLON
 	DW	SINGLE
 	DW	AT_IF
 	DB	0CH
-	DW	*#*# ; wot is this
-	DW	,
-	DW	,
+	DW	STARHASH	; *#*# ; wot is this
+	DW	COMMA	; ,
+	DW	COMMA	; ,
 	DW	AT_ELSE
 	DB	09H
-	DW	*#*C# ; ???
-	DW	,
-	DW	C,
+	DW	STARHC 	; *#*C# ; ???
+	DW	COMMA	; ,
+	DW	CCOMMA	; C,
 	DB	0
 	DW	AT_ELSE
 	DB	03H
@@ -392,6 +392,30 @@ NUMBER	DW	$ + 2
 	DEC	B
 	INC	HL
 SKIPSAV EX	AF, AF'
+
+; TODO - SINGLE
+SINGLE	DW $ + 2
+	NOP
+	JP	(IY)
+
+; TODO - *#*#
+STARHASH DW $ + 2
+	NOP
+	JP (IY)
+; TODO - *#*#C
+STARHC	DW $ + 2
+	NOP
+	JP	(IY)
+
+; TODO ,
+COMMA 	DW $ + 2
+	NOP
+	JP 	(IY)
+
+; TODO C,
+CCOMMA 	DW $ + 2
+	NOP
+	JP	(IY)
 
 
 ; @IF
