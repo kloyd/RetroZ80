@@ -364,12 +364,14 @@ QNUMBER	DW	COLON
 	DW	SINGLE
 	DW	AT_IF
 	DB	0CH
-	DW	STARHASH	; *#*# ; wot is this
+	DW	STARHASH	; *# *# ; wot is this
+	DW	STARHASH
 	DW	COMMA	; ,
 	DW	COMMA	; ,
 	DW	AT_ELSE
 	DB	09H
-	DW	STARHC 	; *#*C# ; ???
+	DW	STARHASH	; *# 
+	DW	STCHSH 	; *C#
 	DW	COMMA	; ,
 	DW	CCOMMA	; C,
 	DB	0
@@ -398,13 +400,30 @@ SINGLE	DW $ + 2
 	NOP
 	JP	(IY)
 
-; TODO - *#*#
+; *# - Literal Handler (Headerless)
+; Pushes to the stack the word whose address is in the instruction register and 
+;increments the instruction register twice (past the word literal)
 STARHASH DW $ + 2
-	NOP
+	LD	A,(BC)
+	LD	E,A 
+	INC	BC 
+	LD	A,(BC)
+	LD	D,A 
+	INC BC
+	PUSH DE 
 	JP (IY)
-; TODO - *#*#C
-STARHC	DW $ + 2
-	NOP
+
+; TODO - *C#
+; Push to the stack the byte whose address is in the instruction register
+; and increment instruction register once.
+STCHSH	DW $ + 2
+	LD	A,(BC)
+	LD	E, A 
+	INC	BC
+	RLA 
+	SBC	A,A 
+	LD	D,A 
+	PUSH DE 
 	JP	(IY)
 
 ; TODO ,
