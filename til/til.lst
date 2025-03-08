@@ -369,8 +369,8 @@
 031A  5C03              	DW	COMMA	; ,
 031C  7103              	DW	AT_ELSE
 031E  09                	DB	09H
-031F  4603              	DW	STARHASH	; *# *C#
-0321  5103              	DW	STCHSH 	; *#*C# ; ???
+031F  4603              	DW	STARHASH	; *#
+0321  5103              	DW	STCHSH 	; *C#
 0323  5C03              	DW	COMMA	; ,
 0325  6103              	DW	CCOMMA	; C,
 0327  00                	DB	0

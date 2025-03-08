@@ -1,0 +1,89 @@
+   0100                         ORG 100H
+                        
+   0100   21 74 01      START   LXI     H, CODEENT
+   0103   22 78 01              SHLD    RSP
+   0106   01 7a 01              LXI     B, BP 
+   0109   2a 78 01              LHLD    RSP 
+   010c   4e                    MOV     C, M 
+   010d   23                    INX     H 
+   010e   46                    MOV     B, M 
+                        ; save HL to virtual register RSP
+   010f   22 78 01              SHLD    RSP
+                        
+                        ; test register save/restore.
+   0112   21 50 50              LXI H, 5050H
+   0115   11 00 f8              LXI D, 0F800H
+   0118   01 0a 90              LXI B, 0900AH
+                        
+                        ; save
+   011b   cd 2b 01              CALL    EXX1 
+                        ; mess up
+   011e   21 00 00              LXI	H, 0
+   0121   11 00 00              LXI	D, 0
+   0124   01 00 00              LXI	B, 0
+                        ;restore
+   0127   cd 39 01              CALL    EXX2
+                        
+   012a   ff                    RST     07H
+                        
+   012b                 EXX1          
+                        ; save
+   012b   22 7c 01      	    SHLD 	TEMPHL
+   012e   62            	    MOV     H, D 
+   012f   6b                    MOV   	L, E 
+   0130   22 7e 01              SHLD    TEMPDE 
+   0133   60                    MOV	H, B 
+   0134   69                    MOV 	L, C 
+   0135   22 80 01              SHLD 	TEMPBC
+   0138   c9                    RET
+                        
+                        
+                        ; restore
+   0139                 EXX2
+   0139   2a 80 01              LHLD	TEMPBC 
+   013c   44                    MOV	B, H
+   013d   4d                    MOV	C, L
+   013e   2a 7e 01              LHLD	TEMPDE 
+   0141   54                    MOV	D, H
+   0142   5d                    MOV	E, L
+   0143   2a 7c 01              LHLD	TEMPHL
+   0146   c9                    RET
+                                
+                        ; scaffold - exit to DDT ?
+   0147   ff                    RST     07H
+                        
+   0148   54 68 65 20   RSTMSG  DB      'The Significant Owl Hoots in the Moonlight', 0AH, 0DH
+   014c   53 69 67 6e   
+   0150   69 66 69 63   
+   0154   61 6e 74 20   
+   0158   4f 77 6c 20   
+   015c   48 6f 6f 74   
+   0160   73 20 69 6e   
+   0164   20 74 68 65   
+   0168   20 4d 6f 6f   
+   016c   6e 6c 69 67   
+   0170   68 74 0a 0d   
+                        
+   0174   00            CODEENT NOP     ; Some code entry point.
+   0175   00                    NOP
+                                
+   0176   00            othercode       NOP
+   0177   00                    NOP
+                                
+                                
+                        
+                        
+   0178   00 00         RSP     DW  0
+   017a   00 00         BP      DW  0
+                        
+                        ; save registers
+   017c   00 00         TEMPHL DW  0
+   017e   00 00         TEMPDE DW  0
+   0180   00 00         TEMPBC DW  0
+                        
+                        
+   0182                         END
+017a  BP            0174  CODEENT       012b  EXX1          0139  EXX2      
+0178  RSP           0148  RSTMSG        0100  START         0180  TEMPBC    
+017e  TEMPDE        017c  TEMPHL        0176  othercode     
+
