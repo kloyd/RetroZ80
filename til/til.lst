@@ -6,478 +6,818 @@
                         ; ***
 
                         ; Non Standard Z80 MC
-      = 0001            std_cpm = 1
+         = 00000001     std_cpm = 1
                         ; Use CPM BDOS?
-      = 0001            CPM = 1
+         = 00000001     CPM = 1
 
                         ;---------- Put in CP/M Transient Memory space.
                          IF CPM = 1
-0100                    	ORG	100H
+00000100                	ORG	100H
                          ELSE
                          ENDIF
-0100  C3 0301           	JP	START
+til.asm:19: *** Error:  Illegal opcode 'JP' ***
+                        	JP	START
 
                         ;---------- START/RESTART
-0103  11 8D04           START	LD	DE,RSTMSG
-0106  3A E003           	LD	A,(BASE)
-0109  A7                	AND	A
-010A  20 08             	JR	NZ, ABORT
-010C  3E 0A             	LD	A,10
-010E  32 E003           	LD	(BASE),A
-0111  11 9A04           	LD	DE,SRTMSG
-0114  31 0080           ABORT	LD	SP,STACK
-0117  D5                	PUSH	DE
-0118  21 0000           	LD	HL,0
-011B  22 8804           	LD	(MODEPTR),HL
-011E  FD21 5A01         	LD	IY,NEXT
-0122  DD21 A703         	LD	IX,RETURN
-0126  21 8080           	LD	HL,8080h
-0129  22 8004           	LD	(LBEND),HL
-012C  01 3201           	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
-012F  C3 5A01           	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
+til.asm:22: *** Error:  Illegal opcode 'LD' ***
+00000100                START	LD	DE,RSTMSG
+til.asm:23: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,(BASE)
+til.asm:24: *** Error:  Illegal opcode 'AND' ***
+                        	AND	A
+til.asm:25: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NZ, ABORT
+til.asm:26: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,10
+til.asm:27: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(BASE),A
+til.asm:28: *** Error:  Illegal opcode 'LD' ***
+                        	LD	DE,SRTMSG
+til.asm:29: *** Error:  Illegal opcode 'LD' ***
+00000100                ABORT	LD	SP,STACK
+til.asm:30: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	DE
+til.asm:31: *** Error:  Illegal opcode 'LD' ***
+                        	LD	HL,0
+til.asm:32: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(MODEPTR),HL
+til.asm:33: *** Error:  Illegal opcode 'LD' ***
+                        	LD	IY,NEXT
+til.asm:34: *** Error:  Illegal opcode 'LD' ***
+                        	LD	IX,RETURN
+til.asm:35: *** Error:  Illegal opcode 'LD' ***
+                        	LD	HL,8080h
+til.asm:36: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(LBEND),HL
+til.asm:37: *** Error:  Illegal opcode 'LD' ***
+                        	LD	BC,OUTER	; Effectively, Set OUTER as the next routine
+til.asm:38: *** Error:  Illegal opcode 'JP' ***
+                        	JP	NEXT		; Call NEXT in the Inner Interpreter, which will load address of OUTER and Jump to it.
 
                         ; Entry point of OUTER interpreter.
-0132  8802              OUTER	DW	TYPE
-0134  9C02              	DW	INLINE
-0136  F402              	DW	ASPACE
-0138  7A01              	DW	TOKEN
-013A  5802              	DW 	QSEARCH	; Leaves something on the stack if found or not found?
-013C  6603              	DW	AT_IF
-013E  0B                	DB	0BH
-013F  0103              	DW	QNUMBER
-0141  7F03              	DW	AT_END
-0143  F3                	DB	F3H
-0144  8D03              	DW	QUESTION
-0146  7B03              	DW	AT_WHILE
-0148  EA                	DB	EAH
-0149  FC02              	DW	QEXECUTE
-014B  7B03              	DW	AT_WHILE
-014D  E9                	DB	E9H
+til.asm:41: *** Error:  CPU endian not defined ***
+00000100                OUTER	DW	TYPE
+til.asm:42: *** Error:  CPU endian not defined ***
+00000100                	DW	INLINE
+til.asm:43: *** Error:  CPU endian not defined ***
+00000100                	DW	ASPACE
+til.asm:44: *** Error:  CPU endian not defined ***
+00000100                	DW	TOKEN
+til.asm:45: *** Error:  CPU endian not defined ***
+00000100                	DW 	QSEARCH	; Leaves something on the stack if found or not found?
+til.asm:46: *** Error:  CPU endian not defined ***
+00000100                	DW	AT_IF
+00000100 0B             	DB	0BH
+til.asm:48: *** Error:  CPU endian not defined ***
+00000101                	DW	QNUMBER
+til.asm:49: *** Error:  CPU endian not defined ***
+00000101                	DW	AT_END
+00000101 F3             	DB	F3H
+til.asm:51: *** Error:  CPU endian not defined ***
+00000102                	DW	QUESTION
+til.asm:52: *** Error:  CPU endian not defined ***
+00000102                	DW	AT_WHILE
+00000102 EA             	DB	EAH
+til.asm:54: *** Error:  CPU endian not defined ***
+00000103                	DW	QEXECUTE
+til.asm:55: *** Error:  CPU endian not defined ***
+00000103                	DW	AT_WHILE
+00000103 E9             	DB	E9H
                         ; End of OUTER - Infinite loop
 
 
 
                         ; --------- Inner Interpreter
-014E  5001              SEMI	DW	$ + 2
-0150  DD4E 00           	LD	C,(IX+0)
-0153  DD23              	INC	IX
-0155  DD46 00           	LD	B,(IX+0)
-0158  DD23              	INC	IX
-015A  0A                NEXT	LD	A,(BC)	; BC = Instruction Register
-015B  6F                	LD	L,A	; @I -> WA (HL = word address)
-015C  03                	INC	BC
-015D  0A                	LD	A,(BC)
-015E  67                	LD	H,A
-015F  03                	INC	BC	; I = I + 2
-0160  5E                RUN	LD	E,(HL)	; @WA -> CA (Code Address)
-0161  23                	INC	HL	; WA = WA + 2
-0162  56                	LD	D,(HL)
-0163  23                	INC	HL
-0164  EB                	EX	DE,HL	; CA -> PC
-0165  E9                	JP	(HL)
+til.asm:62: *** Error:  CPU endian not defined ***
+00000104                SEMI	DW	$ + 2
+til.asm:63: *** Error:  Illegal opcode 'LD' ***
+                        	LD	C,(IX+0)
+til.asm:64: *** Error:  Illegal opcode 'INC' ***
+                        	INC	IX
+til.asm:65: *** Error:  Illegal opcode 'LD' ***
+                        	LD	B,(IX+0)
+til.asm:66: *** Error:  Illegal opcode 'INC' ***
+                        	INC	IX
+til.asm:67: *** Error:  Illegal opcode 'LD' ***
+00000104                NEXT	LD	A,(BC)	; BC = Instruction Register
+til.asm:68: *** Error:  Illegal opcode 'LD' ***
+                        	LD	L,A	; @I -> WA (HL = word address)
+til.asm:69: *** Error:  Illegal opcode 'INC' ***
+                        	INC	BC
+til.asm:70: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,(BC)
+til.asm:71: *** Error:  Illegal opcode 'LD' ***
+                        	LD	H,A
+til.asm:72: *** Error:  Illegal opcode 'INC' ***
+                        	INC	BC	; I = I + 2
+til.asm:73: *** Error:  Illegal opcode 'LD' ***
+00000104                RUN	LD	E,(HL)	; @WA -> CA (Code Address)
+til.asm:74: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL	; WA = WA + 2
+til.asm:75: *** Error:  Illegal opcode 'LD' ***
+                        	LD	D,(HL)
+til.asm:76: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL
+til.asm:77: *** Error:  Illegal opcode 'EX' ***
+                        	EX	DE,HL	; CA -> PC
+til.asm:78: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(HL)
 
-0166  DD2B              COLON	DEC	IX
-0168  DD70 00           	LD	(IX+0),B
-016B  DD2B              	DEC	IX
-016D  DD71 00           	LD	(IX+0),C
-0170  4B                	LD	C,E
-0171  42                	LD	B,D
-0172  FDE9              	JP	(IY)
+til.asm:80: *** Error:  Illegal opcode 'DEC' ***
+00000104                COLON	DEC	IX
+til.asm:81: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(IX+0),B
+til.asm:82: *** Error:  Illegal opcode 'DEC' ***
+                        	DEC	IX
+til.asm:83: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(IX+0),C
+til.asm:84: *** Error:  Illegal opcode 'LD' ***
+                        	LD	C,E
+til.asm:85: *** Error:  Illegal opcode 'LD' ***
+                        	LD	B,D
+til.asm:86: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
                         ;----------- End of Inner -----
 
                         ;----------   IMPORTANT - Start of Vocabulary, Dictionary Entries
                         ;   Any code that is INTERNAL only, should come after the last Dictionary Entry.
-0174                    DICT_BEG
-0174  05544F4B                  DB 5,'TOK'	; TOKEN ID
-0178  AB01              	DW	SEARCH - 6      ; should point to the Entry start.
-017A  7C01              TOKEN	DW	$ + 2
-017C  D9                	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
-017D  2A E203           	LD	HL,(LBP) ; pointer to token
-0180  ED5B 8B04         	LD	DE,(DP) ; pointer to Dictionary
-0184  C1                	POP 	BC	; space left by ASPACE
-0185  3E 20             	LD	A,20H 	; space code
-0187  B9                	CP	C 	; space?
-0188  20 06             	JR 	NZ, TOK
-018A  BE                IGNLB	CP	(HL)
-018B  20 03             	JR	NZ,TOK
-018D  2C                	INC	L
-018E  18 FA             	JR 	IGNLB
-0190  E5                TOK	PUSH	HL
-0191  04                COUNT	INC	B
-0192  2C                	INC 	L
-0193  7E                	LD 	A,(HL)
-0194  B9                	CP 	C
-0195  28 04             	JR 	Z,ENDTOK
-0197  17                	RLA
-0198  30 F7             	JR 	NC,COUNT
-019A  2D                	DEC	L
-019B  2C                ENDTOK	INC	L
-019C  22 E203           	LD 	(LBP), HL
-019F  78                	LD	A,B
-01A0  12                	LD	(DE), A
-01A1  13                	INC	DE
-01A2  E1                	POP	HL
-01A3  48                	LD 	C,B
-01A4  06 00             	LD 	B,0
-01A6  EDB0              	LDIR  		; Move token to dictionary
-01A8  D9                	EXX
-01A9  FDE9              	JP 	(IY)
+00000104                DICT_BEG
+00000104 0554 4F4B              DB 5,'TOK'	; TOKEN ID
+til.asm:93: *** Error:  CPU endian not defined ***
+00000108                	DW	SEARCH - 6      ; should point to the Entry start.
+til.asm:94: *** Error:  CPU endian not defined ***
+00000108                TOKEN	DW	$ + 2
+til.asm:95: *** Error:  Illegal opcode 'EXX' ***
+                        	EXX 	; Save IR (EXX exchanges BC, DE, and HL with shadow registers with BC', DE', and HL'.)
+til.asm:96: *** Error:  Illegal opcode 'LD' ***
+                        	LD	HL,(LBP) ; pointer to token
+til.asm:97: *** Error:  Illegal opcode 'LD' ***
+                        	LD	DE,(DP) ; pointer to Dictionary
+til.asm:98: *** Error:  Illegal opcode 'POP' ***
+                        	POP 	BC	; space left by ASPACE
+til.asm:99: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,20H 	; space code
+til.asm:100: *** Error:  Illegal opcode 'CP' ***
+                        	CP	C 	; space?
+til.asm:101: *** Error:  Illegal opcode 'JR' ***
+                        	JR 	NZ, TOK
+til.asm:102: *** Error:  Illegal opcode 'CP' ***
+00000108                IGNLB	CP	(HL)
+til.asm:103: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NZ,TOK
+til.asm:104: *** Error:  Illegal opcode 'INC' ***
+                        	INC	L
+til.asm:105: *** Error:  Illegal opcode 'JR' ***
+                        	JR 	IGNLB
+til.asm:106: *** Error:  Illegal opcode 'PUSH' ***
+00000108                TOK	PUSH	HL
+til.asm:107: *** Error:  Illegal opcode 'INC' ***
+00000108                COUNT	INC	B
+til.asm:108: *** Error:  Illegal opcode 'INC' ***
+                        	INC 	L
+til.asm:109: *** Error:  Illegal opcode 'LD' ***
+                        	LD 	A,(HL)
+til.asm:110: *** Error:  Illegal opcode 'CP' ***
+                        	CP 	C
+til.asm:111: *** Error:  Illegal opcode 'JR' ***
+                        	JR 	Z,ENDTOK
+til.asm:112: *** Error:  Illegal opcode 'RLA' ***
+                        	RLA
+til.asm:113: *** Error:  Illegal opcode 'JR' ***
+                        	JR 	NC,COUNT
+til.asm:114: *** Error:  Illegal opcode 'DEC' ***
+                        	DEC	L
+til.asm:115: *** Error:  Illegal opcode 'INC' ***
+00000108                ENDTOK	INC	L
+til.asm:116: *** Error:  Illegal opcode 'LD' ***
+                        	LD 	(LBP), HL
+til.asm:117: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,B
+til.asm:118: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(DE), A
+til.asm:119: *** Error:  Illegal opcode 'INC' ***
+                        	INC	DE
+til.asm:120: *** Error:  Illegal opcode 'POP' ***
+                        	POP	HL
+til.asm:121: *** Error:  Illegal opcode 'LD' ***
+                        	LD 	C,B
+til.asm:122: *** Error:  Illegal opcode 'LD' ***
+                        	LD 	B,0
+til.asm:123: *** Error:  Illegal opcode 'LDIR' ***
+                        	LDIR  		; Move token to dictionary
+til.asm:124: *** Error:  Illegal opcode 'EXX' ***
+                        	EXX
+til.asm:125: *** Error:  Illegal opcode 'JP' ***
+                        	JP 	(IY)
 
 
                         ; SEARCH Primitive
-01AB  06534541                  DB      6,'SEA'
-01AF  EB01                      DW      AT - 6     ; Point to the Entry proper.
-01B1  B301              SEARCH  DW      $ + 2
-01B3  D9                        EXX     ; save registers
-01B4  E1                        POP     HL      ; start of header
-01B5  E5                TESTIT  PUSH    HL      ; save start of header
-01B6  ED5B 8B04                 LD      DE,(DP)         ;dictionary pointer.
-01BA  0E 00                     LD      C, 0    ; used with B as false flag
-01BC  1A                        LD      A,(DE)  ;get dictionary token length
-01BD  BE                        CP      (HL)    ; same as keyword length?
-01BE  C2 D801                   JP      NZ, NXTHDR      ; go to next entry in linked list.
-01C1  FE 04                     CP      4       ; Is length over 3?
-01C3  38 02                     JR      C, BEL04        ; skip set 3
-01C5  3E 03                     LD      A, 3    ; length = 3
-01C7  47                BEL04   LD      B, A
-01C8  23                NEXTCH  INC     HL      ; Bump header
-01C9  13                        INC     DE      ; bump dictionary pointer.
-01CA  1A                        LD      A, (DE) ; next character
-01CB  BE                        CP      (HL)
-01CC  20 0A                     JR      NZ, NXTHDR      ; Go to next header entry.
-01CE  10 F8                     DJNZ    NEXTCH          ; next character
-01D0  E1                        POP     HL      ; start of found header
-01D1  11 0600                   LD      DE,6    ; start plus 6
-01D4  19                        ADD     HL,DE   ; == Word Address
-01D5  E5                        PUSH    HL      ; push WA; BC = 0 for Flag.
-01D6  18 0F                     JR      FLAG
-01D8  E1                NXTHDR  POP     HL      ; start of current header
-01D9  11 0400                   LD      DE,4    ; plus 4 == Link Address (pointer to next entry)
-01DC  19                        ADD     HL, DE  ; To Next keyword
-01DD  5E                        LD      E, (HL) ; get link address
-01DE  23                        INC     HL
-01DF  56                        LD      D, (HL)
-01E0  EB                        EX      DE, HL
-01E1  7C                        LD      A, H
-01E2  B5                        OR      L
-01E3  20 D0                     JR      NZ, TESTIT ; not 0, test next header.
-01E5  0E 01                     LD      C, 1    ; false
-01E7  C5                FLAG    PUSH    BC      ; push flag
-01E8  D9                        EXX             ;Restore registers
-01E9  FDE9                      JP      (IY)    ; back to NEXT
+00000108 0653 4541              DB      6,'SEA'
+til.asm:130: *** Error:  CPU endian not defined ***
+0000010C                        DW      AT - 6     ; Point to the Entry proper.
+til.asm:131: *** Error:  CPU endian not defined ***
+0000010C                SEARCH  DW      $ + 2
+til.asm:132: *** Error:  Illegal opcode 'EXX' ***
+                                EXX     ; save registers
+til.asm:133: *** Error:  Illegal opcode 'POP' ***
+                                POP     HL      ; start of header
+til.asm:134: *** Error:  Illegal opcode 'PUSH' ***
+0000010C                TESTIT  PUSH    HL      ; save start of header
+til.asm:135: *** Error:  Illegal opcode 'LD' ***
+                                LD      DE,(DP)         ;dictionary pointer.
+til.asm:136: *** Error:  Illegal opcode 'LD' ***
+                                LD      C, 0    ; used with B as false flag
+til.asm:137: *** Error:  Illegal opcode 'LD' ***
+                                LD      A,(DE)  ;get dictionary token length
+til.asm:138: *** Error:  Illegal opcode 'CP' ***
+                                CP      (HL)    ; same as keyword length?
+til.asm:139: *** Error:  Illegal opcode 'JP' ***
+                                JP      NZ, NXTHDR      ; go to next entry in linked list.
+til.asm:140: *** Error:  Illegal opcode 'CP' ***
+                                CP      4       ; Is length over 3?
+til.asm:141: *** Error:  Illegal opcode 'JR' ***
+                                JR      C, BEL04        ; skip set 3
+til.asm:142: *** Error:  Illegal opcode 'LD' ***
+                                LD      A, 3    ; length = 3
+til.asm:143: *** Error:  Illegal opcode 'LD' ***
+0000010C                BEL04   LD      B, A
+til.asm:144: *** Error:  Illegal opcode 'INC' ***
+0000010C                NEXTCH  INC     HL      ; Bump header
+til.asm:145: *** Error:  Illegal opcode 'INC' ***
+                                INC     DE      ; bump dictionary pointer.
+til.asm:146: *** Error:  Illegal opcode 'LD' ***
+                                LD      A, (DE) ; next character
+til.asm:147: *** Error:  Illegal opcode 'CP' ***
+                                CP      (HL)
+til.asm:148: *** Error:  Illegal opcode 'JR' ***
+                                JR      NZ, NXTHDR      ; Go to next header entry.
+til.asm:149: *** Error:  Illegal opcode 'DJNZ' ***
+                                DJNZ    NEXTCH          ; next character
+til.asm:150: *** Error:  Illegal opcode 'POP' ***
+                                POP     HL      ; start of found header
+til.asm:151: *** Error:  Illegal opcode 'LD' ***
+                                LD      DE,6    ; start plus 6
+til.asm:152: *** Error:  Illegal opcode 'ADD' ***
+                                ADD     HL,DE   ; == Word Address
+til.asm:153: *** Error:  Illegal opcode 'PUSH' ***
+                                PUSH    HL      ; push WA; BC = 0 for Flag.
+til.asm:154: *** Error:  Illegal opcode 'JR' ***
+                                JR      FLAG
+til.asm:155: *** Error:  Illegal opcode 'POP' ***
+0000010C                NXTHDR  POP     HL      ; start of current header
+til.asm:156: *** Error:  Illegal opcode 'LD' ***
+                                LD      DE,4    ; plus 4 == Link Address (pointer to next entry)
+til.asm:157: *** Error:  Illegal opcode 'ADD' ***
+                                ADD     HL, DE  ; To Next keyword
+til.asm:158: *** Error:  Illegal opcode 'LD' ***
+                                LD      E, (HL) ; get link address
+til.asm:159: *** Error:  Illegal opcode 'INC' ***
+                                INC     HL
+til.asm:160: *** Error:  Illegal opcode 'LD' ***
+                                LD      D, (HL)
+til.asm:161: *** Error:  Illegal opcode 'EX' ***
+                                EX      DE, HL
+til.asm:162: *** Error:  Illegal opcode 'LD' ***
+                                LD      A, H
+til.asm:163: *** Error:  Illegal opcode 'OR' ***
+                                OR      L
+til.asm:164: *** Error:  Illegal opcode 'JR' ***
+                                JR      NZ, TESTIT ; not 0, test next header.
+til.asm:165: *** Error:  Illegal opcode 'LD' ***
+                                LD      C, 1    ; false
+til.asm:166: *** Error:  Illegal opcode 'PUSH' ***
+0000010C                FLAG    PUSH    BC      ; push flag
+til.asm:167: *** Error:  Illegal opcode 'EXX' ***
+                                EXX             ;Restore registers
+til.asm:168: *** Error:  Illegal opcode 'JP' ***
+                                JP      (IY)    ; back to NEXT
 
                         ; @ - AT (Assembler won't allow @ for a label.)
-01EB  01400000                  DB      1,'@',0,0   ; Search will find length of 1 and only look at first char. others are spaces to fill 3 bytes.
-01EF  FA01                      DW      CONTEXT - 6
-01F1  F301              AT      DW      $ + 2
-01F3  E1                        POP     HL
-01F4  5E                        LD      E, (HL) ; low byte at address
-01F5  23                        INC     HL
-01F6  56                        LD      D, (HL) ; high byte
-01F7  D5                        PUSH    DE
-01F8  FDE9                      JP      (IY)
+0000010C 0140 0000              DB      1,'@',0,0   ; Search will find length of 1 and only look at first char. others are spaces to fill 3 bytes.
+til.asm:172: *** Error:  CPU endian not defined ***
+00000110                        DW      CONTEXT - 6
+til.asm:173: *** Error:  CPU endian not defined ***
+00000110                AT      DW      $ + 2
+til.asm:174: *** Error:  Illegal opcode 'POP' ***
+                                POP     HL
+til.asm:175: *** Error:  Illegal opcode 'LD' ***
+                                LD      E, (HL) ; low byte at address
+til.asm:176: *** Error:  Illegal opcode 'INC' ***
+                                INC     HL
+til.asm:177: *** Error:  Illegal opcode 'LD' ***
+                                LD      D, (HL) ; high byte
+til.asm:178: *** Error:  Illegal opcode 'PUSH' ***
+                                PUSH    DE
+til.asm:179: *** Error:  Illegal opcode 'JP' ***
+                                JP      (IY)
 
                         ; CONTEXT, pushes to the stack the address of Vocabulary
-01FA  07434F4E                  DB      7,'CON'
-01FE  0802                      DW	MODE - 6
-0200  0202              CONTEXT DW      $ + 2
-0202  11 8604           	LD	DE, CTXTPTR
-0205  D5                	PUSH	DE
-0206  FDE9              	JP	(IY)
+00000110 0743 4F4E              DB      7,'CON'
+til.asm:183: *** Error:  CPU endian not defined ***
+00000114                        DW	MODE - 6
+til.asm:184: *** Error:  CPU endian not defined ***
+00000114                CONTEXT DW      $ + 2
+til.asm:185: *** Error:  Illegal opcode 'LD' ***
+                        	LD	DE, CTXTPTR
+til.asm:186: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	DE
+til.asm:187: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
 
                         ; MODE, pushes mode pointer to stack
-0208  044D4F44          	DB	4,'MOD'
-020C  1602              	DW	EXECUTE -6
-020E  1002              MODE	DW	$ + 2
-0210  11 8804           	LD	DE, MODEPTR
-0213  D5                	PUSH	DE
-0214  FDE9              	JP	(IY)
+00000114 044D 4F44      	DB	4,'MOD'
+til.asm:191: *** Error:  CPU endian not defined ***
+00000118                	DW	EXECUTE -6
+til.asm:192: *** Error:  CPU endian not defined ***
+00000118                MODE	DW	$ + 2
+til.asm:193: *** Error:  Illegal opcode 'LD' ***
+                        	LD	DE, MODEPTR
+til.asm:194: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	DE
+til.asm:195: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
 
                         ; EXECUTE primitive needs a dictionary entry for defining words.
                         ; This is a model for all other Primitive words that will be added to the dictionary
                         ;
-0216  07455845          	DB	7,'EXE'	; Header for dictionary search
-021A  2202              	DW	C@ - 6		; Link address 0000 == End of Linked List.
-021C  1E02              EXECUTE DW	$ + 2		; Address of EXECUTE.
-021E  E1                	POP	HL		; primitive code.
-021F  C3 6001           	JP	RUN
+00000118 0745 5845      	DB	7,'EXE'	; Header for dictionary search
+til.asm:201: *** Error:  CPU endian not defined ***
+0000011C                	DW	C@ - 6		; Link address 0000 == End of Linked List.
+til.asm:202: *** Error:  CPU endian not defined ***
+0000011C                EXECUTE DW	$ + 2		; Address of EXECUTE.
+til.asm:203: *** Error:  Illegal opcode 'POP' ***
+                        	POP	HL		; primitive code.
+til.asm:204: *** Error:  Illegal opcode 'JP' ***
+                        	JP	RUN
 
-0222  02434020          	DB 2,'C@ '
-0226  3302              	DW	DROP - 6
-0228  2A02              C@	DW $ + 2
-022A  E1                	POP		HL
-022B  5E                	LD		E,(HL)
-022C  7B                	LD		A,E
-022D  17                	RLA
-022E  9F                	SBC		A,A
-022F  57                	LD		D,A
-0230  D5                	PUSH   	DE
-0231  FDE9              	JP (IY)
+0000011C 0243 4020      	DB 2,'C@ '
+til.asm:207: *** Error:  CPU endian not defined ***
+00000120                	DW	DROP - 6
+til.asm:208: *** Error:  Illegal opcode '@' ***
+00000120                C@	DW $ + 2
+til.asm:209: *** Error:  Illegal opcode 'POP' ***
+                        	POP		HL
+til.asm:210: *** Error:  Illegal opcode 'LD' ***
+                        	LD		E,(HL)
+til.asm:211: *** Error:  Illegal opcode 'LD' ***
+                        	LD		A,E
+til.asm:212: *** Error:  Illegal opcode 'RLA' ***
+                        	RLA
+til.asm:213: *** Error:  Illegal opcode 'SBC' ***
+                        	SBC		A,A
+til.asm:214: *** Error:  Illegal opcode 'LD' ***
+                        	LD		D,A
+til.asm:215: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH   	DE
+til.asm:216: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
-0233  0444524F          	DB	4,'DRO'
-0237  3E02              	DW 	STATE - 6
-0239  3B02              DROP	DW	$ + 2
-023B  E1                	POP	HL
-023C  FDE9              	JP (IY)
+00000120 0444 524F      	DB	4,'DRO'
+til.asm:219: *** Error:  CPU endian not defined ***
+00000124                	DW 	STATE - 6
+til.asm:220: *** Error:  CPU endian not defined ***
+00000124                DROP	DW	$ + 2
+til.asm:221: *** Error:  Illegal opcode 'POP' ***
+                        	POP	HL
+til.asm:222: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
-023E  05535441          	DB 5,'STA' ; STATE
-0242  4602              	DW	CX - 6
-0244                    STATE
-0244  4602              	DW	$ + 2
+00000124 0553 5441      	DB 5,'STA' ; STATE
+til.asm:225: *** Error:  CPU endian not defined ***
+00000128                	DW	CX - 6
+00000128                STATE
+til.asm:227: *** Error:  CPU endian not defined ***
+00000128                	DW	$ + 2
 
                         	;; PUSH TO STACK ADDRESS OF SYSTEM STATE VARIABLE
                         	; TODO
 
-0246  02432120          	DB	2,'C! '
-024A  4E02              	DW	COMPILER - 6
-024C  4E02              CX 	DW	$ + 2
+00000128 0243 2120      	DB	2,'C! '
+til.asm:233: *** Error:  CPU endian not defined ***
+0000012C                	DW	COMPILER - 6
+til.asm:234: *** Error:  CPU endian not defined ***
+0000012C                CX 	DW	$ + 2
 
-024E  08434F4D          	DB 8, 'COM'   ; PILER --- See *SYS !!! this is an offset to compiler points to last address of compiler dictionary.
-0252  0000              	DW	0000
-0254                    COMPILER
-0254  5602              	DW	$ + 2
-0256  0000              	DW 0000
+0000012C 0843 4F4D      	DB 8, 'COM'   ; PILER --- See *SYS !!! this is an offset to compiler points to last address of compiler dictionary.
+til.asm:237: *** Error:  CPU endian not defined ***
+00000130                	DW	0000
+00000130                COMPILER
+til.asm:239: *** Error:  CPU endian not defined ***
+00000130                	DW	$ + 2
+til.asm:240: *** Error:  CPU endian not defined ***
+00000130                	DW 0000
 
                         ;----------   End of Dictonary Entries
 
                         ;
                         ; ?SEARCH - Secondary to search dictionary.
-0258  6601              QSEARCH DW      COLON
-025A  0002                      DW      CONTEXT
-025C  F101                      DW      AT
-025E  F101                      DW      AT
-0260  B101                      DW      SEARCH
-0262  8303                      DW      DUP
-0264  6603                      DW      AT_IF
-0266  20                	DB	20H
-0267  0E02                      DW	MODE
-0269  2802              	DW	C@
-026B  6603              	DW	AT_IF
-026D  19                	DB	19H
-026E  3902              	DW	DROP
-0270  5402              	DW	COMPILER
-0272  F101              	DW	AT
-0274  B101              	DW	SEARCH
-0276  8303              	DW	DUP
-0278  6603              	DW	AT_IF
-027A  06                	DB	06H
-027B  0000              	DW	0
-027D  7103              	DW	AT_ELSE
-027F  03                	DB	03
-0280  0100              	DW	1
-0282  4402              	DW	STATE
-0284  4C02              	DW	CX
-0286  4E01              	DW	SEMI
+til.asm:246: *** Error:  CPU endian not defined ***
+00000130                QSEARCH DW      COLON
+til.asm:247: *** Error:  CPU endian not defined ***
+00000130                        DW      CONTEXT
+til.asm:248: *** Error:  CPU endian not defined ***
+00000130                        DW      AT
+til.asm:249: *** Error:  CPU endian not defined ***
+00000130                        DW      AT
+til.asm:250: *** Error:  CPU endian not defined ***
+00000130                        DW      SEARCH
+til.asm:251: *** Error:  CPU endian not defined ***
+00000130                        DW      DUP
+til.asm:252: *** Error:  CPU endian not defined ***
+00000130                        DW      AT_IF
+00000130 20             	DB	20H
+til.asm:254: *** Error:  CPU endian not defined ***
+00000131                        DW	MODE
+til.asm:255: *** Error:  CPU endian not defined ***
+00000131                	DW	C@
+til.asm:256: *** Error:  CPU endian not defined ***
+00000131                	DW	AT_IF
+00000131 19             	DB	19H
+til.asm:258: *** Error:  CPU endian not defined ***
+00000132                	DW	DROP
+til.asm:259: *** Error:  CPU endian not defined ***
+00000132                	DW	COMPILER
+til.asm:260: *** Error:  CPU endian not defined ***
+00000132                	DW	AT
+til.asm:261: *** Error:  CPU endian not defined ***
+00000132                	DW	SEARCH
+til.asm:262: *** Error:  CPU endian not defined ***
+00000132                	DW	DUP
+til.asm:263: *** Error:  CPU endian not defined ***
+00000132                	DW	AT_IF
+00000132 06             	DB	06H
+til.asm:265: *** Error:  CPU endian not defined ***
+00000133                	DW	0
+til.asm:266: *** Error:  CPU endian not defined ***
+00000133                	DW	AT_ELSE
+00000133 03             	DB	03
+til.asm:268: *** Error:  CPU endian not defined ***
+00000134                	DW	1
+til.asm:269: *** Error:  CPU endian not defined ***
+00000134                	DW	STATE
+til.asm:270: *** Error:  CPU endian not defined ***
+00000134                	DW	CX
+til.asm:271: *** Error:  CPU endian not defined ***
+00000134                	DW	SEMI
 
 
 
 
                         ; TYPE - String with length byte (0a1234567890) printed to console.
-0288  8A02              TYPE	DW	$ + 2
-028A  D1                TYPEIT	POP	DE	; get address of string
-028B  E5                	PUSH	HL 	; save WA
-028C  C5                	PUSH	BC	; Save IR.
-028D  EB                	EX	DE,HL
-028E  46                	LD	B,(HL)
-028F  23                	INC	HL
-0290  7E                ONECHAR	LD	A,(HL)
-0291  CD B303           	CALL	_ECHO
-0294  23                	INC	HL
-0295  10 F9             	DJNZ	ONECHAR
-0297  C1                	POP	BC	; Restore IR
-0298  E1                	POP	HL	; Restore WA
-0299  C3 5A01           	JP	NEXT
+til.asm:277: *** Error:  CPU endian not defined ***
+00000134                TYPE	DW	$ + 2
+til.asm:278: *** Error:  Illegal opcode 'POP' ***
+00000134                TYPEIT	POP	DE	; get address of string
+til.asm:279: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	HL 	; save WA
+til.asm:280: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	BC	; Save IR.
+til.asm:281: *** Error:  Illegal opcode 'EX' ***
+                        	EX	DE,HL
+til.asm:282: *** Error:  Illegal opcode 'LD' ***
+                        	LD	B,(HL)
+til.asm:283: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL
+til.asm:284: *** Error:  Illegal opcode 'LD' ***
+00000134                ONECHAR	LD	A,(HL)
+til.asm:285: *** Error:  Illegal opcode 'CALL' ***
+                        	CALL	_ECHO
+til.asm:286: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL
+til.asm:287: *** Error:  Illegal opcode 'DJNZ' ***
+                        	DJNZ	ONECHAR
+til.asm:288: *** Error:  Illegal opcode 'POP' ***
+                        	POP	BC	; Restore IR
+til.asm:289: *** Error:  Illegal opcode 'POP' ***
+                        	POP	HL	; Restore WA
+til.asm:290: *** Error:  Illegal opcode 'JP' ***
+                        	JP	NEXT
 
 
 
 
                         ; INLINE
-029C  9E02              INLINE	DW	$ + 2	;header address
-029E  C5                	PUSH	BC	; Save IR
-029F  CD D303           ISTART	CALL	_CRLF	; Issue CR / LF on terminal for new input
-02A2  21 0004           	LD	HL, LBADD	; Buffer
-02A5  22 E203           	LD	(LBP), HL
-02A8  06 80             	LD	B, LENGTH
-02AA  36 20             CLEAR	LD	(HL), SPACE
-02AC  23                	INC	HL
-02AD  10 FB             	DJNZ	CLEAR
-02AF  2E 00             ZERO	LD	L,0
-02B1  CD C103           INKEY	CALL	_KEY
-02B4  FE 18             	CP	LINEDEL		; CTRL-X is Line Delete
-02B6  20 05             	JR	NZ,TSTBS
-02B8  CD B303           	CALL	_ECHO
-02BB  18 E2             	JR ISTART
-02BD  FE 08             TSTBS	CP	BKSP		; backspace CTRL-H
-02BF  20 0B             	JR	NZ, TSTCR
-02C1  2B                	DEC	HL
-02C2  FA AF02           	JP	M,ZERO
-02C5  36 20             	LD	(HL), SPACE
-02C7  CD B303           ISSUE	CALL	_ECHO
-02CA  18 E5             	JR	INKEY
-02CC  FE 0D             TSTCR	CP	CR
-02CE  28 1C             	JR	Z,LAST1
-02D0  CB7D              	BIT	7,L
-02D2  20 0E             	JR	NZ,IEND
-02D4  77                SAVEIT	LD	(HL),A
-02D5  FE 61             	CP	61H	; Less than LC A ?
-02D7  38 06             	JR	C,NOTLC
-02D9  FE 7B             	CP	7BH	; MORE THAN LC Z?
-02DB  30 02             	JR	NC,NOTLC
-02DD  CBAE              	RES	5,(HL)
-02DF  2C                NOTLC	INC	L
-02E0  18 E5             	JR	ISSUE
-02E2  2D                IEND	DEC	L
-02E3  4F                	LD	C,A
-02E4  3E 08             	LD	A,BKSP
-02E6  CD B303           	CALL	_ECHO
-02E9  79                	LD	A,C
-02EA  18 E8             	JR 	SAVEIT
-02EC  3E 20             LAST1	LD	A, SPACE
-02EE  CD B303           	CALL	_ECHO
-02F1  C1                	POP	BC
-02F2  FDE9              	JP	(IY)	; Return to NEXT inner interpreter.
+til.asm:296: *** Error:  CPU endian not defined ***
+00000134                INLINE	DW	$ + 2	;header address
+til.asm:297: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	BC	; Save IR
+til.asm:298: *** Error:  Illegal opcode 'CALL' ***
+00000134                ISTART	CALL	_CRLF	; Issue CR / LF on terminal for new input
+til.asm:299: *** Error:  Illegal opcode 'LD' ***
+                        	LD	HL, LBADD	; Buffer
+til.asm:300: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(LBP), HL
+til.asm:301: *** Error:  Illegal opcode 'LD' ***
+                        	LD	B, LENGTH
+til.asm:302: *** Error:  Illegal opcode 'LD' ***
+00000134                CLEAR	LD	(HL), SPACE
+til.asm:303: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL
+til.asm:304: *** Error:  Illegal opcode 'DJNZ' ***
+                        	DJNZ	CLEAR
+til.asm:305: *** Error:  Illegal opcode 'LD' ***
+00000134                ZERO	LD	L,0
+til.asm:306: *** Error:  Illegal opcode 'CALL' ***
+00000134                INKEY	CALL	_KEY
+til.asm:307: *** Error:  Illegal opcode 'CP' ***
+                        	CP	LINEDEL		; CTRL-X is Line Delete
+til.asm:308: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NZ,TSTBS
+til.asm:309: *** Error:  Illegal opcode 'CALL' ***
+                        	CALL	_ECHO
+til.asm:310: *** Error:  Illegal opcode 'JR' ***
+                        	JR ISTART
+til.asm:311: *** Error:  Illegal opcode 'CP' ***
+00000134                TSTBS	CP	BKSP		; backspace CTRL-H
+til.asm:312: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NZ, TSTCR
+til.asm:313: *** Error:  Illegal opcode 'DEC' ***
+                        	DEC	HL
+til.asm:314: *** Error:  Illegal opcode 'JP' ***
+                        	JP	M,ZERO
+til.asm:315: *** Error:  Illegal opcode 'LD' ***
+                        	LD	(HL), SPACE
+til.asm:316: *** Error:  Illegal opcode 'CALL' ***
+00000134                ISSUE	CALL	_ECHO
+til.asm:317: *** Error:  Illegal opcode 'JR' ***
+                        	JR	INKEY
+til.asm:318: *** Error:  Illegal opcode 'CP' ***
+00000134                TSTCR	CP	CR
+til.asm:319: *** Error:  Illegal opcode 'JR' ***
+                        	JR	Z,LAST1
+til.asm:320: *** Error:  Illegal opcode 'BIT' ***
+                        	BIT	7,L
+til.asm:321: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NZ,IEND
+til.asm:322: *** Error:  Illegal opcode 'LD' ***
+00000134                SAVEIT	LD	(HL),A
+til.asm:323: *** Error:  Illegal opcode 'CP' ***
+                        	CP	61H	; Less than LC A ?
+til.asm:324: *** Error:  Illegal opcode 'JR' ***
+                        	JR	C,NOTLC
+til.asm:325: *** Error:  Illegal opcode 'CP' ***
+                        	CP	7BH	; MORE THAN LC Z?
+til.asm:326: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NC,NOTLC
+til.asm:327: *** Error:  Illegal opcode 'RES' ***
+                        	RES	5,(HL)
+til.asm:328: *** Error:  Illegal opcode 'INC' ***
+00000134                NOTLC	INC	L
+til.asm:329: *** Error:  Illegal opcode 'JR' ***
+                        	JR	ISSUE
+til.asm:330: *** Error:  Illegal opcode 'DEC' ***
+00000134                IEND	DEC	L
+til.asm:331: *** Error:  Illegal opcode 'LD' ***
+                        	LD	C,A
+til.asm:332: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,BKSP
+til.asm:333: *** Error:  Illegal opcode 'CALL' ***
+                        	CALL	_ECHO
+til.asm:334: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,C
+til.asm:335: *** Error:  Illegal opcode 'JR' ***
+                        	JR 	SAVEIT
+til.asm:336: *** Error:  Illegal opcode 'LD' ***
+00000134                LAST1	LD	A, SPACE
+til.asm:337: *** Error:  Illegal opcode 'CALL' ***
+                        	CALL	_ECHO
+til.asm:338: *** Error:  Illegal opcode 'POP' ***
+                        	POP	BC
+til.asm:339: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)	; Return to NEXT inner interpreter.
 
                         ; Push 20h to stack, will pop into BC in TOKEN, and BC will be 0020h
-02F4  F602              ASPACE	DW	$ + 2
-02F6  11 2000           	LD	DE, 20h
-02F9  D5                	PUSH	DE
-02FA  FDE9              	JP	(IY)
+til.asm:342: *** Error:  CPU endian not defined ***
+00000134                ASPACE	DW	$ + 2
+til.asm:343: *** Error:  Illegal opcode 'LD' ***
+                        	LD	DE, 20h
+til.asm:344: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	DE
+til.asm:345: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
 
 
                         ; TODO ?EXECUTE - Execute Secondary.
-02FC  FE02              QEXECUTE	DW $ + 2
-02FE  00                	NOP
-02FF  FDE9              	JP (IY)
+til.asm:349: *** Error:  CPU endian not defined ***
+00000134                QEXECUTE	DW $ + 2
+til.asm:350: *** Error:  Illegal opcode 'NOP' ***
+                        	NOP
+til.asm:351: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
                         ; TODO ?NUMBER - Is the token a Number?
                         ; No - return false
                         ; Yes - push number to stack
-0301  6601              QNUMBER	DW	COLON
-0303  2E03              	DW	NUMBER
-0305  6603              	DW	AT_IF
-0307  25                	DB	25H
-0308  0E02              	DW	MODE
-030A  2802              	DW	C@
-030C  6603              	DW	AT_IF
-030E  19                	DB	19H
-030F  4103              	DW	SINGLE
-0311  6603              	DW	AT_IF
-0313  0C                	DB	0CH
-0314  4603              	DW	STARHASH	; *# *# ; wot is this
-0316  4603              	DW	STARHASH
-0318  5C03              	DW	COMMA	; ,
-031A  5C03              	DW	COMMA	; ,
-031C  7103              	DW	AT_ELSE
-031E  09                	DB	09H
-031F  4603              	DW	STARHASH	; *#
-0321  5103              	DW	STCHSH 	; *C#
-0323  5C03              	DW	COMMA	; ,
-0325  6103              	DW	CCOMMA	; C,
-0327  00                	DB	0
-0328  7103              	DW	AT_ELSE
-032A  03                	DB	03H
-032B  01                	DB	1
-032C  4E01              	DW	SEMI
+til.asm:356: *** Error:  CPU endian not defined ***
+00000134                QNUMBER	DW	COLON
+til.asm:357: *** Error:  CPU endian not defined ***
+00000134                	DW	NUMBER
+til.asm:358: *** Error:  CPU endian not defined ***
+00000134                	DW	AT_IF
+00000134 25             	DB	25H
+til.asm:360: *** Error:  CPU endian not defined ***
+00000135                	DW	MODE
+til.asm:361: *** Error:  CPU endian not defined ***
+00000135                	DW	C@
+til.asm:362: *** Error:  CPU endian not defined ***
+00000135                	DW	AT_IF
+00000135 19             	DB	19H
+til.asm:364: *** Error:  CPU endian not defined ***
+00000136                	DW	SINGLE
+til.asm:365: *** Error:  CPU endian not defined ***
+00000136                	DW	AT_IF
+00000136 0C             	DB	0CH
+til.asm:367: *** Error:  CPU endian not defined ***
+00000137                	DW	STARHASH	; *# *# ; wot is this
+til.asm:368: *** Error:  CPU endian not defined ***
+00000137                	DW	STARHASH
+til.asm:369: *** Error:  CPU endian not defined ***
+00000137                	DW	COMMA	; ,
+til.asm:370: *** Error:  CPU endian not defined ***
+00000137                	DW	COMMA	; ,
+til.asm:371: *** Error:  CPU endian not defined ***
+00000137                	DW	AT_ELSE
+00000137 09             	DB	09H
+til.asm:373: *** Error:  CPU endian not defined ***
+00000138                	DW	STARHASH	; *#
+til.asm:374: *** Error:  CPU endian not defined ***
+00000138                	DW	STCHSH 	; *C#
+til.asm:375: *** Error:  CPU endian not defined ***
+00000138                	DW	COMMA	; ,
+til.asm:376: *** Error:  CPU endian not defined ***
+00000138                	DW	CCOMMA	; C,
+00000138 00             	DB	0
+til.asm:378: *** Error:  CPU endian not defined ***
+00000139                	DW	AT_ELSE
+00000139 03             	DB	03H
+0000013A 01             	DB	1
+til.asm:381: *** Error:  CPU endian not defined ***
+0000013B                	DW	SEMI
 
                         ; NUMBER
-032E  3003              NUMBER	DW	$ + 2
-0330  D9                	EXX
-0331  2A 8B04           	LD	HL,(DP) ; GET DP
-0334  46                	LD	B,(HL)  ; GET LEN
-0335  23                	INC	HL	;
-0336  7E                	LD	A,(HL)	; GET FIRST CHAR
-0337  FE 2D             	CP	2DH 	; MINUS?
-0339  3E 00             	LD	A,0
-033B  20 03             	JR	NZ,SKIPSAV
-033D  3D                	DEC	A
-033E  05                	DEC	B
-033F  23                	INC	HL
-0340  08                SKIPSAV EX	AF, AF'
+til.asm:384: *** Error:  CPU endian not defined ***
+0000013B                NUMBER	DW	$ + 2
+til.asm:385: *** Error:  Illegal opcode 'EXX' ***
+                        	EXX
+til.asm:386: *** Error:  Illegal opcode 'LD' ***
+                        	LD	HL,(DP) ; GET DP
+til.asm:387: *** Error:  Illegal opcode 'LD' ***
+                        	LD	B,(HL)  ; GET LEN
+til.asm:388: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL	;
+til.asm:389: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,(HL)	; GET FIRST CHAR
+til.asm:390: *** Error:  Illegal opcode 'CP' ***
+                        	CP	2DH 	; MINUS?
+til.asm:391: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,0
+til.asm:392: *** Error:  Illegal opcode 'JR' ***
+                        	JR	NZ,SKIPSAV
+til.asm:393: *** Error:  Illegal opcode 'DEC' ***
+                        	DEC	A
+til.asm:394: *** Error:  Illegal opcode 'DEC' ***
+                        	DEC	B
+til.asm:395: *** Error:  Illegal opcode 'INC' ***
+                        	INC	HL
+til.asm:396: *** Error:  Illegal opcode 'EX' ***
+0000013B                SKIPSAV EX	AF, AF'
 
                         ; TODO - SINGLE
-0341  4303              SINGLE	DW $ + 2
-0343  00                	NOP
-0344  FDE9              	JP	(IY)
+til.asm:399: *** Error:  CPU endian not defined ***
+0000013B                SINGLE	DW $ + 2
+til.asm:400: *** Error:  Illegal opcode 'NOP' ***
+                        	NOP
+til.asm:401: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
 
                         ; *# - Literal Handler (Headerless)
                         ; Pushes to the stack the word whose address is in the instruction register and
                         ;increments the instruction register twice (past the word literal)
-0346  4803              STARHASH DW $ + 2
-0348  0A                	LD	A,(BC)
-0349  5F                	LD	E,A
-034A  03                	INC	BC
-034B  0A                	LD	A,(BC)
-034C  57                	LD	D,A
-034D  03                	INC BC
-034E  D5                	PUSH DE
-034F  FDE9              	JP (IY)
+til.asm:406: *** Error:  CPU endian not defined ***
+0000013B                STARHASH DW $ + 2
+til.asm:407: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,(BC)
+til.asm:408: *** Error:  Illegal opcode 'LD' ***
+                        	LD	E,A
+til.asm:409: *** Error:  Illegal opcode 'INC' ***
+                        	INC	BC
+til.asm:410: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,(BC)
+til.asm:411: *** Error:  Illegal opcode 'LD' ***
+                        	LD	D,A
+til.asm:412: *** Error:  Illegal opcode 'INC' ***
+                        	INC BC
+til.asm:413: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH DE
+til.asm:414: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
                         ; TODO - *C#
                         ; Push to the stack the byte whose address is in the instruction register
                         ; and increment instruction register once.
-0351  5303              STCHSH	DW $ + 2
-0353  0A                	LD	A,(BC)
-0354  5F                	LD	E, A
-0355  03                	INC	BC
-0356  17                	RLA
-0357  9F                	SBC	A,A
-0358  57                	LD	D,A
-0359  D5                	PUSH DE
-035A  FDE9              	JP	(IY)
+til.asm:419: *** Error:  CPU endian not defined ***
+0000013B                STCHSH	DW $ + 2
+til.asm:420: *** Error:  Illegal opcode 'LD' ***
+                        	LD	A,(BC)
+til.asm:421: *** Error:  Illegal opcode 'LD' ***
+                        	LD	E, A
+til.asm:422: *** Error:  Illegal opcode 'INC' ***
+                        	INC	BC
+til.asm:423: *** Error:  Illegal opcode 'RLA' ***
+                        	RLA
+til.asm:424: *** Error:  Illegal opcode 'SBC' ***
+                        	SBC	A,A
+til.asm:425: *** Error:  Illegal opcode 'LD' ***
+                        	LD	D,A
+til.asm:426: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH DE
+til.asm:427: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
 
                         ; TODO ,
-035C  5E03              COMMA 	DW $ + 2
-035E  00                	NOP
-035F  FDE9              	JP 	(IY)
+til.asm:430: *** Error:  CPU endian not defined ***
+0000013B                COMMA 	DW $ + 2
+til.asm:431: *** Error:  Illegal opcode 'NOP' ***
+                        	NOP
+til.asm:432: *** Error:  Illegal opcode 'JP' ***
+                        	JP 	(IY)
 
                         ; TODO C,
-0361  6303              CCOMMA 	DW $ + 2
-0363  00                	NOP
-0364  FDE9              	JP	(IY)
+til.asm:435: *** Error:  CPU endian not defined ***
+0000013B                CCOMMA 	DW $ + 2
+til.asm:436: *** Error:  Illegal opcode 'NOP' ***
+                        	NOP
+til.asm:437: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
 
 
                         ; @IF
                         ; Top of stack != 0 (true), BC++
                         ; Top of stack == 0 (false), BC <- BC + offset Byte
-0366  6803              AT_IF	DW $ + 2
-0368  E1                	POP HL
-0369  7D                        LD A,L
-036A  B4                        OR H
-036B  CA 7303                   JP Z,_ELSE
-036E  03                        INC BC
-036F  FDE9              	JP (IY)
+til.asm:443: *** Error:  CPU endian not defined ***
+0000013B                AT_IF	DW $ + 2
+til.asm:444: *** Error:  Illegal opcode 'POP' ***
+                        	POP HL
+til.asm:445: *** Error:  Illegal opcode 'LD' ***
+                                LD A,L
+til.asm:446: *** Error:  Illegal opcode 'OR' ***
+                                OR H
+til.asm:447: *** Error:  Illegal opcode 'JP' ***
+                                JP Z,_ELSE
+til.asm:448: *** Error:  Illegal opcode 'INC' ***
+                                INC BC
+til.asm:449: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
-0371  7303              AT_ELSE	DW $ + 2
-0373  0A                _ELSE   LD      A,(BC)  ; get jump byte
-0374  81                        ADD     A, C       ; add to IR
-0375  4F                        LD      C, A    ; Reset IR
-0376  30 01                     JR      NC, OUTPG ; Past Page?
-0378  04                        INC     B       ;  Yes
-0379  FDE9              OUTPG     JP      (IY)
+til.asm:451: *** Error:  CPU endian not defined ***
+0000013B                AT_ELSE	DW $ + 2
+til.asm:452: *** Error:  Illegal opcode 'LD' ***
+0000013B                _ELSE   LD      A,(BC)  ; get jump byte
+til.asm:453: *** Error:  Illegal opcode 'ADD' ***
+                                ADD     A, C       ; add to IR
+til.asm:454: *** Error:  Illegal opcode 'LD' ***
+                                LD      C, A    ; Reset IR
+til.asm:455: *** Error:  Illegal opcode 'JR' ***
+                                JR      NC, OUTPG ; Past Page?
+til.asm:456: *** Error:  Illegal opcode 'INC' ***
+                                INC     B       ;  Yes
+til.asm:457: *** Error:  Illegal opcode 'JP' ***
+0000013B                OUTPG     JP      (IY)
 
 
                         ; TODO *WHILE
-037B  7D03              AT_WHILE  DW $ + 2
+til.asm:461: *** Error:  CPU endian not defined ***
+0000013B                AT_WHILE  DW $ + 2
 
-037D  FDE9              	JP (IY)
+til.asm:463: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
                         ; TODO *END
-037F  8103              AT_END  DW $ + 2
+til.asm:466: *** Error:  CPU endian not defined ***
+0000013B                AT_END  DW $ + 2
 
-0381  FDE9              	JP (IY)
+til.asm:468: *** Error:  Illegal opcode 'JP' ***
+                        	JP (IY)
 
 
-0383  8503              DUP     DW      $ + 2
-0385  E1                        POP     HL
-0386  E5                        PUSH    HL
-0387  E5                        PUSH    HL
-0388  FDE9                      JP      (IY)
+til.asm:471: *** Error:  CPU endian not defined ***
+0000013B                DUP     DW      $ + 2
+til.asm:472: *** Error:  Illegal opcode 'POP' ***
+                                POP     HL
+til.asm:473: *** Error:  Illegal opcode 'PUSH' ***
+                                PUSH    HL
+til.asm:474: *** Error:  Illegal opcode 'PUSH' ***
+                                PUSH    HL
+til.asm:475: *** Error:  Illegal opcode 'JP' ***
+                                JP      (IY)
 
                         ; For Z80 MC - DDT was changed to use RST 6 since the hardware uses RST 7.
                         ; For Standard CP/M
-038A  8C03              TILHALT	DW	$ + 2
+til.asm:479: *** Error:  CPU endian not defined ***
+0000013B                TILHALT	DW	$ + 2
 
-038C  FF                	RST	38H
+til.asm:481: *** Error:  Illegal opcode 'RST' ***
+                        	RST	38H
                         ;	RST 	6
                         ;	ENDIF
 
@@ -487,30 +827,43 @@
                         ; YES -> QUESTION
 
                         ; QUESTION
-038D  8F03              QUESTION	DW	$ + 2
-038F  2A 8B04           	LD 	HL,(DP)
-0392  23                	INC 	HL
-0393  CB7E              	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
-0395  28 06             	JR	Z,ERROR	;NOT SET ERROR
-0397  11 AF03           	LD	DE,OK
-039A  D5                	PUSH	DE
-039B  FDE9              	JP	(IY)
-039D  CD D303           ERROR	CALL	_CRLF
-03A0  FD21 A703         	LD	IY,RETURN
-03A4  C3 8802           	JP	TYPE
-03A7  11 AD03           RETURN	LD	DE, QMSG
-03AA  C3 B203           	JP	_PATCH
+til.asm:491: *** Error:  CPU endian not defined ***
+0000013B                QUESTION	DW	$ + 2
+til.asm:492: *** Error:  Illegal opcode 'LD' ***
+                        	LD 	HL,(DP)
+til.asm:493: *** Error:  Illegal opcode 'INC' ***
+                        	INC 	HL
+til.asm:494: *** Error:  Illegal opcode 'BIT' ***
+                        	BIT	7,(HL)	; IF BIT SET, A TERMINATOR
+til.asm:495: *** Error:  Illegal opcode 'JR' ***
+                        	JR	Z,ERROR	;NOT SET ERROR
+til.asm:496: *** Error:  Illegal opcode 'LD' ***
+                        	LD	DE,OK
+til.asm:497: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	DE
+til.asm:498: *** Error:  Illegal opcode 'JP' ***
+                        	JP	(IY)
+til.asm:499: *** Error:  Illegal opcode 'CALL' ***
+0000013B                ERROR	CALL	_CRLF
+til.asm:500: *** Error:  Illegal opcode 'LD' ***
+                        	LD	IY,RETURN
+til.asm:501: *** Error:  Illegal opcode 'JP' ***
+                        	JP	TYPE
+til.asm:502: *** Error:  Illegal opcode 'LD' ***
+0000013B                RETURN	LD	DE, QMSG
+til.asm:503: *** Error:  Illegal opcode 'JP' ***
+                        	JP	_PATCH
 
                         ; GOTO TYPE
 
 
                         ; Internals
 
-03AD  3F00              QMSG	DB	'?', 0
-03AF  4F4B00            OK	DB	'OK',0
+0000013B 3F00           QMSG	DB	'?', 0
+0000013D 4F4B 00        OK	DB	'OK',0
 
                         ; PATCH internal routine.
-03B2  00                _PATCH	DB	0
+00000140 00             _PATCH	DB	0
 
 
 
@@ -524,150 +877,189 @@
                         ; * _CRLF - Output CR/LF to terminal
                         ;----------------------------------------
                         ;; Handy Constants
-      = 000D            CR	EQU     0DH
-      = 000A            LF	EQU     0AH
-      = 0024            DOLLAR  EQU     24H
-      = 001B            ESC     EQU     1BH
-      = 0003            CTRLC   EQU     03H
+         = 0000000D     CR	EQU     0DH
+         = 0000000A     LF	EQU     0AH
+         = 00000024     DOLLAR  EQU     24H
+         = 0000001B     ESC     EQU     1BH
+         = 00000003     CTRLC   EQU     03H
 
                         ; Screen print calls
-      = 0003            CHAR_IN EQU     03H
-      = 000B            C_STAT  EQU     0BH
-      = 0006            C_RAWIO EQU     06H
+         = 00000003     CHAR_IN EQU     03H
+         = 0000000B     C_STAT  EQU     0BH
+         = 00000006     C_RAWIO EQU     06H
 
                         ; til has own write str using _ECHO
                         ;WRITESTR        EQU     9H
-      = 0002            PRTCHR  EQU     02H
-      = 0005            BDOS    EQU     05H
+         = 00000002     PRTCHR  EQU     02H
+         = 00000005     BDOS    EQU     05H
 
                         ; Output one character.
                         ; A = Input Char.
                         ; preserve BC register.
                         ; preserve HL register.
-03B3                    _ECHO
+00000141                _ECHO
                          IF CPM = 1
-03B3  E5                	PUSH HL
-03B4  C5                    PUSH BC
-03B5  D5                	PUSH DE
-03B6  57                	LD D,A
-03B7  5F                	LD E,A
-03B8  0E 02                 LD C, PRTCHR
-03BA  CD 0500               CALL BDOS
-03BD  D1                    POP DE
-03BE  C1                	POP BC
-03BF  E1                	POP HL
+til.asm:550: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH HL
+til.asm:551: *** Error:  Illegal opcode 'PUSH' ***
+                            PUSH BC
+til.asm:552: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH DE
+til.asm:553: *** Error:  Illegal opcode 'LD' ***
+                        	LD D,A
+til.asm:554: *** Error:  Illegal opcode 'LD' ***
+                        	LD E,A
+til.asm:555: *** Error:  Illegal opcode 'LD' ***
+                            LD C, PRTCHR
+til.asm:556: *** Error:  Illegal opcode 'CALL' ***
+                            CALL BDOS
+til.asm:557: *** Error:  Illegal opcode 'POP' ***
+                            POP DE
+til.asm:558: *** Error:  Illegal opcode 'POP' ***
+                        	POP BC
+til.asm:559: *** Error:  Illegal opcode 'POP' ***
+                        	POP HL
                           ELSE
                           ENDIF
-03C0  C9                    RET
+til.asm:563: *** Error:  Illegal opcode 'RET' ***
+                            RET
 
                         ; Get a key
-03C1                    _KEY
+00000141                _KEY
                          IF CPM = 1
                         	; Preserve BC, DE, and HL.
-03C1  C5                	PUSH	BC
-03C2  D5                	PUSH	DE
-03C3  E5                	PUSH	HL
-03C4  0E 06             WAITKEY	LD	C, C_RAWIO
-03C6  11 FFFF           		LD	DE,FFFFh
-03C9  CD 0500           		CALL    BDOS
-03CC  B7                		OR 	A
-03CD  28 F5             		JR 	Z,WAITKEY
-03CF  E1                		POP	HL
-03D0  D1                		POP	DE
-03D1  C1                		POP	BC
+til.asm:569: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	BC
+til.asm:570: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	DE
+til.asm:571: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH	HL
+til.asm:572: *** Error:  Illegal opcode 'LD' ***
+00000141                WAITKEY	LD	C, C_RAWIO
+til.asm:573: *** Error:  Illegal opcode 'LD' ***
+                        		LD	DE,FFFFh
+til.asm:574: *** Error:  Illegal opcode 'CALL' ***
+                        		CALL    BDOS
+til.asm:575: *** Error:  Illegal opcode 'OR' ***
+                        		OR 	A
+til.asm:576: *** Error:  Illegal opcode 'JR' ***
+                        		JR 	Z,WAITKEY
+til.asm:577: *** Error:  Illegal opcode 'POP' ***
+                        		POP	HL
+til.asm:578: *** Error:  Illegal opcode 'POP' ***
+                        		POP	DE
+til.asm:579: *** Error:  Illegal opcode 'POP' ***
+                        		POP	BC
                          ELSE
                          ENDIF
-03D2  C9                        RET
+til.asm:597: *** Error:  Illegal opcode 'RET' ***
+                                RET
 
                         ; Output CR LF to console.
-03D3                    _CRLF
-03D3  F5                	PUSH AF
-03D4  3E 0D             	LD A, CR
-03D6  CD B303           	CALL _ECHO
-03D9  3E 0A             	LD A, LF
-03DB  CD B303           	CALL _ECHO
-03DE  F1                	POP AF
-03DF  C9                        RET
+00000141                _CRLF
+til.asm:601: *** Error:  Illegal opcode 'PUSH' ***
+                        	PUSH AF
+til.asm:602: *** Error:  Illegal opcode 'LD' ***
+                        	LD A, CR
+til.asm:603: *** Error:  Illegal opcode 'CALL' ***
+                        	CALL _ECHO
+til.asm:604: *** Error:  Illegal opcode 'LD' ***
+                        	LD A, LF
+til.asm:605: *** Error:  Illegal opcode 'CALL' ***
+                        	CALL _ECHO
+til.asm:606: *** Error:  Illegal opcode 'POP' ***
+                        	POP AF
+til.asm:607: *** Error:  Illegal opcode 'RET' ***
+                                RET
 
                         ; Constants
                         ;
-      = 0018            LINEDEL	EQU	18H	; ctrl-x line delete
-      = 0020            SPACE	EQU	20h	; space
-      = 0008            BKSP	EQU	08h	; ctrl-H backspace
+         = 00000018     LINEDEL	EQU	18H	; ctrl-x line delete
+         = 00000020     SPACE	EQU	20h	; space
+         = 00000008     BKSP	EQU	08h	; ctrl-H backspace
 
                         ; Variables
-03E0  00                BASE	DB	0	; BASE for restart/warm start
-03E1  00                MODEVAR	DB	0	; MODE
-03E2  0000              LBP	DW	0 	; line buffer pointer
-      = 0080            LENGTH	EQU	128	; buffer length
-0400                    	ORG	400h	; put on page boundary
-0400   (0080)           LBADD	DS	128	; text input buffer
-0480  0000              LBEND	DW	0
+00000141 00             BASE	DB	0	; BASE for restart/warm start
+00000142 00             MODEVAR	DB	0	; MODE
+til.asm:618: *** Error:  CPU endian not defined ***
+00000143                LBP	DW	0 	; line buffer pointer
+         = 00000080     LENGTH	EQU	128	; buffer length
+00000400                	ORG	400h	; put on page boundary
+00000400  (00000080)    LBADD	DS	128	; text input buffer
+til.asm:622: *** Error:  CPU endian not defined ***
+00000480                LBEND	DW	0
 
                         ; CORE points to Core Vocab (first entry in dictionary)
-0482  7401              CORE    DW      DICT_BEG
+til.asm:625: *** Error:  CPU endian not defined ***
+00000480                CORE    DW      DICT_BEG
 
                         ; SYS - hmm
-0484  8204              SYS	DW	CORE
+til.asm:628: *** Error:  CPU endian not defined ***
+00000480                SYS	DW	CORE
 
                         ;---- used by CONTEXT... points to Vocabulary?
-0486  8204              CTXTPTR DW      CORE
-0488  8A04              MODEPTR	DW	MODEVAL
+til.asm:631: *** Error:  CPU endian not defined ***
+00000480                CTXTPTR DW      CORE
+til.asm:632: *** Error:  CPU endian not defined ***
+00000480                MODEPTR	DW	MODEVAL
 
-048A  00                MODEVAL	DB	0
+00000480 00             MODEVAL	DB	0
 
                         ; Dictonary pointer
-048B  B004              DP	DW	DICT
-      = 8000            STACK	EQU	8000h
+til.asm:637: *** Error:  CPU endian not defined ***
+00000481                DP	DW	DICT
+         = 00008000     STACK	EQU	8000h
 
                         ; Strings
-048D  0C205449 4C205245 RSTMSG	DB	12, ' TIL RESTART'
-0495  53544152 54
-049A  15205745 4C434F4D SRTMSG	DB	21, ' WELCOME TO RETRO TIL'
-04A2  4520544F 20524554
-04AA  524F2054 494C
+00000481 0C20 5449 4C20 RSTMSG	DB	12, ' TIL RESTART'
+00000487 5245 5354 4152
+0000048D 54
+0000048E 1520 5745 4C43 SRTMSG	DB	21, ' WELCOME TO RETRO TIL'
+00000494 4F4D 4520 544F
+0000049A 2052 4554 524F
+000004A0 2054 494C
 
 
-04B0   (0FA0)           DICT    DS      4000
+000004A4  (00000FA0)    DICT    DS      4000
 
 
 
 
-1450                    	END
+00001444                	END
 
 
-ABORT              0114    ASPACE             02F4    AT                 01F1
-AT_ELSE            0371    AT_END             037F    AT_IF              0366
-AT_WHILE           037B    BASE               03E0    BDOS               0005 E
-BEL04              01C7    BKSP               0008 E  C@                 0228
-CCOMMA             0361    CHAR_IN            0003 E  CLEAR              02AA
-COLON              0166    COMMA              035C    COMPILER           0254
-CONTEXT            0200    CORE               0482    COUNT              0191
-CPM                0001 E  CR                 000D E  CTRLC              0003 E
-CTXTPTR            0486    CX                 024C    C_RAWIO            0006 E
-C_STAT             000B E  DICT               04B0    DICT_BEG           0174
-DOLLAR             0024 E  DP                 048B    DROP               0239
-DUP                0383    ENDTOK             019B    ERROR              039D
-ESC                001B E  EXECUTE            021C    FLAG               01E7
-IEND               02E2    IGNLB              018A    INKEY              02B1
-INLINE             029C    ISSUE              02C7    ISTART             029F
-LAST1              02EC    LBADD              0400    LBEND              0480
-LBP                03E2    LENGTH             0080 E  LF                 000A E
-LINEDEL            0018 E  MODE               020E    MODEPTR            0488
-MODEVAL            048A    MODEVAR            03E1    NEXT               015A
-NEXTCH             01C8    NOTLC              02DF    NUMBER             032E
-NXTHDR             01D8    OK                 03AF    ONECHAR            0290
-OUTER              0132    OUTPG              0379    PRTCHR             0002 E
-QEXECUTE           02FC    QMSG               03AD    QNUMBER            0301
-QSEARCH            0258    QUESTION           038D    RETURN             03A7
-RSTMSG             048D    RUN                0160    SAVEIT             02D4
-SEARCH             01B1    SEMI               014E    SINGLE             0341
-SKIPSAV            0340    SPACE              0020 E  SRTMSG             049A
-STACK              8000 E  STARHASH           0346    START              0103
-STATE              0244    STCHSH             0351    STD_CPM            0001 E
-SYS                0484    TESTIT             01B5    TILHALT            038A
-TOK                0190    TOKEN              017A    TSTBS              02BD
-TSTCR              02CC    TYPE               0288    TYPEIT             028A
-WAITKEY            03C4    ZERO               02AF    _CRLF              03D3
-_ECHO              03B3    _ELSE              0373    _KEY               03C1
-_PATCH             03B2
+ABORT              00000100    ASPACE             00000134    AT                 00000110
+AT_ELSE            0000013B    AT_END             0000013B    AT_IF              0000013B
+AT_WHILE           0000013B    BASE               00000141    BDOS               00000005 E
+BEL04              0000010C    BKSP               00000008 E  C                  00000120
+CCOMMA             0000013B    CHAR_IN            00000003 E  CLEAR              00000134
+COLON              00000104    COMMA              0000013B    COMPILER           00000130
+CONTEXT            00000114    CORE               00000480    COUNT              00000108
+CPM                00000001 E  CR                 0000000D E  CTRLC              00000003 E
+CTXTPTR            00000480    CX                 0000012C    C_RAWIO            00000006 E
+C_STAT             0000000B E  DICT               000004A4    DICT_BEG           00000104
+DOLLAR             00000024 E  DP                 00000481    DROP               00000124
+DUP                0000013B    ENDTOK             00000108    ERROR              0000013B
+ESC                0000001B E  EXECUTE            0000011C    FLAG               0000010C
+IEND               00000134    IGNLB              00000108    INKEY              00000134
+INLINE             00000134    ISSUE              00000134    ISTART             00000134
+LAST1              00000134    LBADD              00000400    LBEND              00000480
+LBP                00000143    LENGTH             00000080 E  LF                 0000000A E
+LINEDEL            00000018 E  MODE               00000118    MODEPTR            00000480
+MODEVAL            00000480    MODEVAR            00000142    NEXT               00000104
+NEXTCH             0000010C    NOTLC              00000134    NUMBER             0000013B
+NXTHDR             0000010C    OK                 0000013D    ONECHAR            00000134
+OUTER              00000100    OUTPG              0000013B    PRTCHR             00000002 E
+QEXECUTE           00000134    QMSG               0000013B    QNUMBER            00000134
+QSEARCH            00000130    QUESTION           0000013B    RETURN             0000013B
+RSTMSG             00000481    RUN                00000104    SAVEIT             00000134
+SEARCH             0000010C    SEMI               00000104    SINGLE             0000013B
+SKIPSAV            0000013B    SPACE              00000020 E  SRTMSG             0000048E
+STACK              00008000 E  STARHASH           0000013B    START              00000100
+STATE              00000128    STCHSH             0000013B    STD_CPM            00000001 E
+SYS                00000480    TESTIT             0000010C    TILHALT            0000013B
+TOK                00000108    TOKEN              00000108    TSTBS              00000134
+TSTCR              00000134    TYPE               00000134    TYPEIT             00000134
+WAITKEY            00000141    ZERO               00000134    _CRLF              00000141
+_ECHO              00000141    _ELSE              0000013B    _KEY               00000141
+_PATCH             00000140

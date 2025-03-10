@@ -14,7 +14,6 @@
    0112   21 50 50              LXI H, 5050H
    0115   11 00 f8              LXI D, 0F800H
    0118   01 0a 90              LXI B, 0900AH
-                        
                         ; save
    011b   cd 2b 01              CALL    EXX1 
                         ; mess up
@@ -48,7 +47,10 @@
    0142   5d                    MOV	E, L
    0143   2a 7c 01              LHLD	TEMPHL
    0146   c9                    RET
-                                
+                        
+                        
+                        ; EXX - EXchange HL <-> HL'  etc 
+                        
                         ; scaffold - exit to DDT ?
    0147   ff                    RST     07H
                         
@@ -80,10 +82,11 @@
    017c   00 00         TEMPHL DW  0
    017e   00 00         TEMPDE DW  0
    0180   00 00         TEMPBC DW  0
+   0182   00 00         TEMPSW  DW      0
                         
                         
-   0182                         END
+   0184                         END
 017a  BP            0174  CODEENT       012b  EXX1          0139  EXX2      
 0178  RSP           0148  RSTMSG        0100  START         0180  TEMPBC    
-017e  TEMPDE        017c  TEMPHL        0176  othercode     
+017e  TEMPDE        017c  TEMPHL        0182  TEMPSW        0176  othercode 
 

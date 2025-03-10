@@ -48,6 +48,9 @@ EXX2
         LHLD	TEMPHL
         RET
 
+
+; EXX - EXchange HL <-> HL'  etc 
+
 ; scaffold - exit to DDT ?
         RST     07H
 
@@ -69,6 +72,7 @@ BP      DW  0
 TEMPHL DW  0
 TEMPDE DW  0
 TEMPBC DW  0
+TEMPSW  DW      0
 
 
         END
